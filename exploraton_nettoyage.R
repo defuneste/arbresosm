@@ -36,3 +36,18 @@ query <- "SELECT COUNT(p.natural)
 # on execute la requete
 df_arbres <- dbGetQuery(con, query)
 df_arbres
+
+
+# les differents tags 
+
+querytags <- "SELECT DISTINCT skeys (tags)
+              FROM planet_osm_point
+              WHERE planet_osm_point.natural = 'tree';"
+
+nom_tags <- dbGetQuery(con, querytags)
+
+
+
+# se deconnecter de la base
+
+dbDisconnect(con)
