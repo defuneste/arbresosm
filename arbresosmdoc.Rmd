@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Les données sont issues d'un import d'OSM via <https://www.geofabrik.de/>. L'import c'est fait dans une BD Postgresql (10) avec les extensions postgis, postgis_topology et hstore. 
 
-## Mise en place de la BD
+## Création de la BD
 
 La base à d'abord été crée : en psql, et connecté en postgres (sudo -i -u postgres)
 ```{sql, eval = FALSE}
@@ -22,6 +22,8 @@ CREATE EXTENSION postgis;
 CREATE EXTENSION postgis_topology;
 CREATE EXTENSION hstore;
 ```
+
+## import/peuplement de la BD
 
 Puis importée via [osm2pgsql](https://wiki.openstreetmap.org/wiki/Osm2pgsql)
 
@@ -37,4 +39,5 @@ sudo -u postgres osm2pgsql -d osmdbfrance --slim -C 8000--hstore --multi-geometr
 - -multi-geometry va cr'eer des geometries multiples plutôt que de séparer en simple \hfill\break
 -W demande le code ici de postgres \hfill\break
 
+# 
 

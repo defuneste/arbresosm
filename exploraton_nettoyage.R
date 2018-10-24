@@ -40,12 +40,14 @@ df_arbres
 
 # les differents tags 
 
-querytags <- "SELECT DISTINCT skeys (tags)
+querytags <- "SELECT DISTINCT skeys (tags), COUNT(*) AS decompte
               FROM planet_osm_point
-              WHERE planet_osm_point.natural = 'tree';"
+              WHERE planet_osm_point.natural = 'tree'
+              GROUP BY skeys (tags)
+              ORDER BY decompte DESC;"
 
 nom_tags <- dbGetQuery(con, querytags)
-
+dim(nom_tags)
 
 
 # se deconnecter de la base
