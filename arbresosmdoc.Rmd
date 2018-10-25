@@ -39,5 +39,10 @@ sudo -u postgres osm2pgsql -d osmdbfrance --slim -C 8000--hstore --multi-geometr
 - -multi-geometry va cr'eer des geometries multiples plutôt que de séparer en simple \hfill\break
 -W demande le code ici de postgres \hfill\break
 
-# 
+# Analyse exploratoire
+
+## stats de base
+
+Au moment de l'import (mi-otobre) il y avait 762167 lignes correspondant à des arbres isolés (natural=tree). Ils étaient renseignés par 27 champs (en plus de 'tags' et 'natural') completés par 146 champs dans tags. Cela fait donc rien que pour les arbres 173 champs. 
+
 

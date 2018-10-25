@@ -5,7 +5,8 @@
 # chargement des différents packages demandés 
 
 library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
-library(sp)
+library(sp) # classes et methodes pour données spatiales
+library(dplyr) # manip de données en tidyverse
 
 # il faut établir une connexion 
 
@@ -38,7 +39,8 @@ df_arbres <- dbGetQuery(con, query)
 df_arbres
 
 
-# les differents tags 
+# les differents tags : skey() renvoie la valeur de tous les attributs d'un hstore comme un set 
+# https://www.postgresql.org/docs/current/static/hstore.html
 
 querytags <- "SELECT DISTINCT skeys (tags), COUNT(*) AS decompte
               FROM planet_osm_point
@@ -48,6 +50,29 @@ querytags <- "SELECT DISTINCT skeys (tags), COUNT(*) AS decompte
 
 nom_tags <- dbGetQuery(con, querytags)
 dim(nom_tags)
+
+# les autres champs que tag
+
+
+querychamps <- "SELECT * 
+                FROM planet_osm_point
+                WHERE planet_osm_point.natural = 'tree';"
+
+nom_champs <- dbGetQuery(con, querychamps)
+dim(nom_champs) # un peu d'info
+str(nom_champs) # un peu d'info
+
+names_champs <- nom_champs %>% # on prends le total
+    summarise_all(funs(sum(!is.na(.)))) # on compte ceux renseignés
+
+sum(names_champs > 0) # retourne le nombre de champs renseignés
+                      # attention tags et natural sont gardés
+
+# on garde les tags et les champs dans un seul df
+
+arbretemp <- nom_champs[,names_champs > 0] # on ne garde que les champs renseignés
+
+
 
 
 # se deconnecter de la base
