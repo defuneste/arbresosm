@@ -72,8 +72,34 @@ sum(names_champs > 0) # retourne le nombre de champs renseignés
 
 arbretemp <- nom_champs[,names_champs > 0] # on ne garde que les champs renseignés
 
+# il faut convertir les infos dans hstore en un tableau
+# je me suis inspiré de cette réponse : 
+# https://dba.stackexchange.com/questions/94717/dynamically-convert-hstore-keys-into-columns-for-an-unknown-set-of-keys/123006
+# elle fonctionne en deux temps
+# en premier une requête qui va generer une requete avec chaque tag dans un SELECT
+# ex : h->'addr:city' AS "addr:city" mais autant de fois que j'ai de clefs
+# j'ai du utiliser $$ car j'avais des ' un peu partout 
+# la base est l' utilisation de format 
+# https://www.postgresql.org/docs/current/static/functions-string.html#FUNCTIONS-STRING-FORMAT
 
+query <- "
+SELECT format($$SELECT osm_id, h->%s 
+	SELECT osm_id, tags AS h 
+	FROM planet_osm_point
+	WHERE planet_osm_point.natural = 'tree';) t;$$
+	, string_agg(quote_literal(key) || ' AS ' || quote_ident(key), $$, h->$$))
+	AS sql   
+FROM  (
+   SELECT DISTINCT key
+   FROM  planet_osm_point, skeys(tags) key
+   WHERE planet_osm_point.natural = 'tree'
+   ORDER  BY 1
+   ) sub;"
 
+sql <- dbGetQuery(con, query)
+
+# ce fichier texte comporte une erreur il semble quil y ai une limite sur le nombre de caractères 
+Query <- cat(shQuote(sql), "\n")
 
 # se deconnecter de la base
 
