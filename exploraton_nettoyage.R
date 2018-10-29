@@ -7,6 +7,8 @@
 library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
 library(sp) # classes et methodes pour données spatiales
 library(dplyr) # manip de données en tidyverse
+library(ggplot2) # la visualisation
+library(tibble)
 
 # il faut établir une connexion 
 
@@ -53,7 +55,6 @@ dim(nom_tags)
 
 # les autres champs que tag
 
-
 querychamps <- "SELECT * 
                 FROM planet_osm_point
                 WHERE planet_osm_point.natural = 'tree';"
@@ -86,7 +87,7 @@ query <- "
 SELECT format($$SELECT osm_id, h->%s 
 	SELECT osm_id, tags AS h 
 	FROM planet_osm_point
-	WHERE planet_osm_point.natural = 'tree';) t;$$
+	WHERE planet_osm_point.natural = 'tree') t;$$
 	, string_agg(quote_literal(key) || ' AS ' || quote_ident(key), $$, h->$$))
 	AS sql   
 FROM  (
@@ -96,10 +97,27 @@ FROM  (
    ORDER  BY 1
    ) sub;"
 
-sql <- dbGetQuery(con, query)
+# sql <- dbGetQuery(con, query)
+# Query <- cat(shQuote(sql), "\n")
+# cela ne marche pas, il faudra corriger
+# j' ai corrigé le code dans pgadmiin et créer une table propre
+# que l'on va importer
 
-# ce fichier texte comporte une erreur il semble quil y ai une limite sur le nombre de caractères 
-Query <- cat(shQuote(sql), "\n")
+arbretemp_tags <- dbGetQuery(con, "SELECT * FROM arbres_osm_tags;")
+dim(arbretemp_tags)
+names(arbretemp_tags)
+
+# on groupe les deux tables
+arbres_osm <- full_join(arbretemp, arbretemp_tags, by = "osm_id") #ici un bind_col pourrair aussi marcher
+dim(arbres_osm)
+names(arbres_osm) # le fichier est bien volumineux 
+
+names_champs <- arbres_osm %>% 
+    summarise_all(funs(sum(!is.na(.)))) %>% 
+    t()  %>%   
+# creuser t
+            
+ 
 
 # se deconnecter de la base
 
