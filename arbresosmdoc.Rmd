@@ -7,6 +7,10 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(RPostgreSQL)
+library(tibble)
 ```
 
 # Jeux de données
@@ -43,6 +47,64 @@ sudo -u postgres osm2pgsql -d osmdbfrance --slim -C 8000--hstore --multi-geometr
 
 ## stats de base
 
-Au moment de l'import (mi-otobre) il y avait 762167 lignes correspondant à des arbres isolés (natural=tree). Ils étaient renseignés par 27 champs (en plus de 'tags' et 'natural') completés par 146 champs dans tags. Cela fait donc rien que pour les arbres 173 champs. 
+Au moment de l'import (mi-otobre) il y avait 762167 lignes correspondant à des arbres isolés (natural=tree). Ils étaient renseignés par 27 champs (en plus de 'tags' et 'natural') completés par 146 champs dans tags. Cela ne fait donc rien que pour les arbres isolés 173 champs. 
+
+Species est le champs le plus renseigné : 98874 valeures non nules, soit près de 13%. 
+
+```{r, include=FALSE}
+
+pw <- {
+  "osm117" # oui c'est pas top de l'ecrire
+}
+
+# charge les drivers pour postgre 
+drv <- dbDriver("PostgreSQL")
+# class(drv) #une verif
+
+# fais un pont vers la db réutilisable
+# ici j'ai pris une db en local pour tester
+# con sera utilisé pour chaque connection et pkoi le franciser
+con <- dbConnect(drv, dbname = "osmdbfrance",
+                 host = "localhost", port = 5432, # attention 5432 par défaut
+                 user = "postgres", password = pw) # idem pour user
+rm(pw) # mouais
+
+arbretemp_tags <- dbGetQuery(con, "SELECT * FROM arbres_osm_tags;")
+dim(arbretemp_tags)
+names(arbretemp_tags)
+
+querychamps <- "SELECT * 
+                FROM planet_osm_point
+                WHERE planet_osm_point.natural = 'tree';"
+
+nom_champs <- dbGetQuery(con, querychamps)
+names_champs <- nom_champs %>% # on prends le total
+    summarise_all(funs(sum(!is.na(.)))) # on compte ceux renseignés
+
+arbretemp <- nom_champs[,names_champs > 0] # on ne garde que les champs renseignés
+# on groupe les deux tables
+arbres_osm <- full_join(arbretemp, arbretemp_tags, by = "osm_id") #ici un bind_col pourrair aussi marcher
+
+names_champs <- arbres_osm %>% 
+    summarise_all(funs(sum(!is.na(.)))) %>% 
+    t() 
+    
+names_champs <- rownames_to_column(as.data.frame(names_champs), var = "champs") # on passe les noms de champs dans une variable
+ 
+names_champs <- names_champs %>% 
+    arrange(desc(V1)) # on range par ordre decroissant
+
+names_champs <- names_champs[-c(1:4),] # on retire les valeurs toujours présentent
+
+```
+
+
+```{r}
+names_champs[1:30,] %>% 
+    ggplot( aes(x = reorder(champs, V1), y = V1)) +
+    geom_bar(stat = "identity") +
+    coord_flip()
+```
+
 
 

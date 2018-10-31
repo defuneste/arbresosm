@@ -114,10 +114,24 @@ names(arbres_osm) # le fichier est bien volumineux
 
 names_champs <- arbres_osm %>% 
     summarise_all(funs(sum(!is.na(.)))) %>% 
-    t()  %>%   
-# creuser t
-            
+    t()  
+    
+dim(names_champs) # petite verif
+
+names_champs <- rownames_to_column(as.data.frame(names_champs), var = "champs") # on passe les noms de champs dans une variable
  
+barplot(sort(names_champs$V1, decreasing = T)) # un graphique rapide
+
+names_champs <- names_champs %>% 
+    arrange(desc(V1)) # on range par ordre decroissant
+
+names_champs <- names_champs[-c(1:4),] # on retire les valeurs toujours présentent
+
+names_champs[1:30,] %>% # un graph des 30 champs les plus présents
+    ggplot( aes(x = reorder(champs, V1), y = V1)) +
+    geom_bar(stat = "identity") +
+    coord_flip()
+
 
 # se deconnecter de la base
 
