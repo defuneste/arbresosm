@@ -4,11 +4,20 @@
 
 # chargement des différents packages demandés 
 
+### DB
 library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
-library(sp) # classes et methodes pour données spatiales
+
+### manip
 library(dplyr) # manip de données en tidyverse
-library(ggplot2) # la visualisation
 library(tibble)
+
+### visualisation
+library(ggplot2) # la visualisation
+
+## analyse spatiale / carto
+library(sp) # classes et methodes pour données spatiales
+library(rgeos) # geos, penser à installer libgeos++-dev avant
+library(ggmap) # fond de carte et autre
 
 # il faut établir une connexion 
 
@@ -130,7 +139,12 @@ names_champs <- names_champs[-c(1:4),] # on retire les valeurs toujours présent
 names_champs[1:30,] %>% # un graph des 30 champs les plus présents
     ggplot( aes(x = reorder(champs, V1), y = V1)) +
     geom_bar(stat = "identity") +
-    coord_flip()
+    coord_flip() +
+    ylab("Nombres d'arbres") +
+    xlab("Champs")
+
+#### on va regarder pour les espèces
+
 
 
 # se deconnecter de la base

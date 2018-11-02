@@ -103,7 +103,9 @@ names_champs <- names_champs[-c(1:4),] # on retire les valeurs toujours présent
 names_champs[1:30,] %>% 
     ggplot( aes(x = reorder(champs, V1), y = V1)) +
     geom_bar(stat = "identity") +
-    coord_flip()
+    coord_flip()+
+    ylab("Nombres d'arbres") +
+    xlab("Champs")
 ```
 
 
