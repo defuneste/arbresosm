@@ -15,9 +15,10 @@ library(tibble)
 library(ggplot2) # la visualisation
 
 ## analyse spatiale / carto
-library(sp) # classes et methodes pour données spatiales
+library(sp) # classes et methodes pour données spatiales pe déclassé par SF
+library(rgdal) #gdal pour projection
 library(rgeos) # geos, penser à installer libgeos++-dev avant
-library(ggmap) # fond de carte et autre
+library(sf) # nouveau package de classes et methodes spatiales
 
 # il faut établir une connexion 
 
@@ -109,7 +110,7 @@ FROM  (
 # sql <- dbGetQuery(con, query)
 # Query <- cat(shQuote(sql), "\n")
 # cela ne marche pas, il faudra corriger
-# j' ai corrigé le code dans pgadmiin et créer une table propre
+# j' ai corrigé le code dans pgadmin et créer une table propre
 # que l'on va importer
 
 arbretemp_tags <- dbGetQuery(con, "SELECT * FROM arbres_osm_tags;")
@@ -142,6 +143,17 @@ names_champs[1:30,] %>% # un graph des 30 champs les plus présents
     coord_flip() +
     ylab("Nombres d'arbres") +
     xlab("Champs")
+
+### un import des regions et de la france
+## on a toutes les petites îles
+
+france.shp <- st_read(con,  query = "SELECT name, way
+FROM planet_osm_polygon
+WHERE boundary = 'administrative'  AND admin_level = '4';")
+
+
+plot(france.shp)
+st_crs(france.shp)
 
 #### on va regarder pour les espèces
 
