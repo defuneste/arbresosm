@@ -1,6 +1,9 @@
 ### projet pour l'analyse des arbres seul dans OSM 
 # exploration et "nettoyage des données"
 # octobre 2018
+# Petites notes sur le code :
+# pour me rapeller qu'un objet `a des infos geometrie type vector je lui accolle un .shp
+# si c'est un raster .grid
 
 # chargement des différents packages demandés 
 
@@ -13,12 +16,15 @@ library(tibble)
 
 ### visualisation
 library(ggplot2) # la visualisation
+library(tmap) # carto
 
 ## analyse spatiale / carto
 library(sp) # classes et methodes pour données spatiales pe déclassé par SF
-library(rgdal) #gdal pour projection
-library(rgeos) # geos, penser à installer libgeos++-dev avant
-library(sf) # nouveau package de classes et methodes spatiales
+library(rgdal) #gdal pour projection, crud et surtout export
+library(rgeos) # geos, penser à installer libgeos++-dev avant, travail avec objet sp
+library(sf) # nouveau package de classes et methodes spatiales doit "remplacer" rgdal et rgeos (et ofc sp) 
+library(units) # gestion des unités pour ha
+
 
 # il faut établir une connexion 
 
@@ -74,7 +80,7 @@ dim(nom_champs) # un peu d'info
 str(nom_champs) # un peu d'info
 
 names_champs <- nom_champs %>% # on prends le total
-    summarise_all(funs(sum(!is.na(.)))) # on compte ceux renseignés
+    summarise_all(funs(sum(!is.na(.)))) # on compte ceux renseigné
 
 sum(names_champs > 0) # retourne le nombre de champs renseignés
                       # attention tags et natural sont gardés
@@ -93,24 +99,25 @@ arbretemp <- nom_champs[,names_champs > 0] # on ne garde que les champs renseign
 # la base est l' utilisation de format 
 # https://www.postgresql.org/docs/current/static/functions-string.html#FUNCTIONS-STRING-FORMAT
 
-query <- "
-SELECT format($$SELECT osm_id, h->%s 
-	SELECT osm_id, tags AS h 
-	FROM planet_osm_point
-	WHERE planet_osm_point.natural = 'tree') t;$$
-	, string_agg(quote_literal(key) || ' AS ' || quote_ident(key), $$, h->$$))
-	AS sql   
-FROM  (
-   SELECT DISTINCT key
-   FROM  planet_osm_point, skeys(tags) key
-   WHERE planet_osm_point.natural = 'tree'
-   ORDER  BY 1
-   ) sub;"
+#query <- "
+#SELECT format($$SELECT osm_id, h->%s 
+#	SELECT osm_id, tags AS h 
+#	FROM planet_osm_point
+#	WHERE planet_osm_point.natural = 'tree') t;$$
+#	, string_agg(quote_literal(key) || ' AS ' || quote_ident(key), $$, h->$$))
+#	AS sql   
+#FROM  (
+#   SELECT DISTINCT key
+#   FROM  planet_osm_point, skeys(tags) key
+#   WHERE planet_osm_point.natural = 'tree'
+#   ORDER  BY 1
+#   ) sub;"
 
 # sql <- dbGetQuery(con, query)
 # Query <- cat(shQuote(sql), "\n")
 # cela ne marche pas, il faudra corriger
-# j' ai corrigé le code dans pgadmin et créer une table propre
+
+# j'ai corrigé le code dans pgadmin et créer une table propre
 # que l'on va importer
 
 arbretemp_tags <- dbGetQuery(con, "SELECT * FROM arbres_osm_tags;")
@@ -122,7 +129,7 @@ arbres_osm <- full_join(arbretemp, arbretemp_tags, by = "osm_id") #ici un bind_c
 dim(arbres_osm)
 names(arbres_osm) # le fichier est bien volumineux 
 
-names_champs <- arbres_osm %>% 
+names_champs <- arbres_osm %>% # une liste de champs 
     summarise_all(funs(sum(!is.na(.)))) %>% 
     t()  
     
@@ -135,9 +142,9 @@ barplot(sort(names_champs$V1, decreasing = T)) # un graphique rapide
 names_champs <- names_champs %>% 
     arrange(desc(V1)) # on range par ordre decroissant
 
-names_champs <- names_champs[-c(1:4),] # on retire les valeurs toujours présentent
+names_champs <- names_champs[-c(1:4),] # on retire les valeurs toujours présentes
 
-names_champs[1:30,] %>% # un graph des 30 champs les plus présents
+names_champs[1:100,] %>% # un graph des 30 champs les plus présents
     ggplot( aes(x = reorder(champs, V1), y = V1)) +
     geom_bar(stat = "identity") +
     coord_flip() +
@@ -151,9 +158,26 @@ france.shp <- st_read(con,  query = "SELECT name, way
 FROM planet_osm_polygon
 WHERE boundary = 'administrative'  AND admin_level = '4';")
 
+str(france.shp, max.level = 2) # on regarde un peu l' objet
 
-plot(france.shp)
-st_crs(france.shp)
+plot(france.shp) # on a un paquet de petites Iles non fr
+st_crs(france.shp) # WGS 84 / Pseudo-Mercator
+
+plot(france.shp[france.shp$name == "Formica III",]) # une petite verif sans NSE
+
+filter(france.shp, name == "Formica III") # une version avec NSE
+
+france.shp$surface_ha <-  set_units(st_area(france.shp), value = ha) # on calcul la surface en ha
+
+# on filtre par la surface pour enlever les paradis fiscaux
+# on a encore un problème avc des îles italiennes aux larges de la corse, on vire Toscanna
+# les objets units doivent être filtrés ou indexés par d'autre objets units d'ou le set_units(x, value = ha)
+# pas certains que dplyr aime du coup c'est du r:base
+plot(france.shp[france.shp$name != "Toscana" & france.shp$surface_ha > set_units(30000, value = ha),])
+france.shp <- france.shp[france.shp$name != "Toscana" & france.shp$surface_ha > set_units(30000, value = ha),]
+
+## faire des cartes avec tmap
+
 
 #### on va regarder pour les espèces
 

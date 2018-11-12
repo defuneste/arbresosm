@@ -32,7 +32,7 @@ CREATE EXTENSION hstore;
 Puis importée via [osm2pgsql](https://wiki.openstreetmap.org/wiki/Osm2pgsql)
 
 ```{bash, , eval = FALSE}
-sudo -u postgres osm2pgsql -d osmdbfrance --slim -C 8000--hstore --multi-geometry 
+sudo -u postgres osm2pgsql -d [sonpetitnom] --slim -C 8000--hstore --multi-geometry 
 /home/lo82302h/Téléchargements/france-latest.osm.bz2 -W
 ```
 
@@ -40,7 +40,7 @@ sudo -u postgres osm2pgsql -d osmdbfrance --slim -C 8000--hstore --multi-geometr
 - -slim permet de sauver les données temporaires dans la DB plutot que dans la RAM \hfill\break
 - -hstore indique qu'il y un type de données hstore (spécifique à postgreSQL) \hfill\break
 -C indique la RAM à utilisée \hfill\break
-- -multi-geometry va cr'eer des geometries multiples plutôt que de séparer en simple \hfill\break
+- -multi-geometry va créer des geometries multiples plutôt que de séparer en simple \hfill\break
 -W demande le code ici de postgres \hfill\break
 
 # Analyse exploratoire
