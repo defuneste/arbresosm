@@ -7,10 +7,23 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(dplyr)
-library(ggplot2)
-library(RPostgreSQL)
+### DB
+library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
+
+### manip
+library(dplyr) # manip de données en tidyverse
 library(tibble)
+
+### visualisation
+library(ggplot2) # la visualisation
+library(tmap) # carto
+
+## analyse spatiale / carto
+library(sp) # classes et methodes pour données spatiales pe déclassé par SF
+library(rgdal) #gdal pour projection, crud et surtout export
+library(rgeos) # geos, penser à installer libgeos++-dev avant, travail avec objet sp
+library(sf) # nouveau package de classes et methodes spatiales doit "remplacer" rgdal et rgeos (et ofc sp) 
+library(units) # gestion des unités pour ha
 ```
 
 # Jeux de données
@@ -108,5 +121,34 @@ names_champs[1:30,] %>%
     xlab("Champs")
 ```
 
+# Répartition du champ "species"
 
+```{r, include=FALSE}
+
+france.shp <- st_read(con,  query = "SELECT name, way
+FROM planet_osm_polygon
+WHERE boundary = 'administrative'  AND admin_level = '4';")
+
+france.shp$surface_ha <-  set_units(st_area(france.shp), value = ha) # on calcul la surface en ha
+
+# on filtre par la surface pour enlever les paradis fiscaux
+# on a encore un problème avc des îles italiennes aux larges de la corse, on vire Toscanna
+# les objets units doivent être filtrés ou indexés par d'autre objets units d'ou le set_units(x, value = ha)
+# pas certains que dplyr aime du coup c'est du r:base
+plot(france.shp[france.shp$name != "Toscana" & france.shp$surface_ha > set_units(30000, value = ha),])
+france.shp <- france.shp[france.shp$name != "Toscana" & france.shp$surface_ha > set_units(30000, value = ha),]
+
+species.shp <- st_read(con,  query = "SELECT way, tags -> 'species' AS species
+FROM planet_osm_point
+WHERE planet_osm_point.natural = 'tree';")
+
+species.shp$especes <- factor(ifelse(is.na(species.shp$species), 0, 1))
+```
+
+```{r}
+ tm_shape(st_simplify(st_geometry(france.shp)), dTolerance = 100) + # attention il a un simplify pour aller plus vite
+    tm_borders("grey") +
+    tm_shape(species.shp) +
+        tm_dots(alpha = 0.4, col = "especes", palette = c("#8be0b3", "red"))
+```
 

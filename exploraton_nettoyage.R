@@ -75,7 +75,7 @@ querychamps <- "SELECT *
                 FROM planet_osm_point
                 WHERE planet_osm_point.natural = 'tree';"
 
-nom_champs <- dbGetQuery(con, querychamps)
+nom_champs <- dbGetQuery(con, query = querychamps)
 dim(nom_champs) # un peu d'info
 str(nom_champs) # un peu d'info
 
@@ -177,6 +177,24 @@ plot(france.shp[france.shp$name != "Toscana" & france.shp$surface_ha > set_units
 france.shp <- france.shp[france.shp$name != "Toscana" & france.shp$surface_ha > set_units(30000, value = ha),]
 
 ## faire des cartes avec tmap
+
+# un import plus leger avec les espèces
+species.shp <- st_read(con,  query = "SELECT way, tags -> 'species' AS species
+FROM planet_osm_point
+WHERE planet_osm_point.natural = 'tree';")
+
+st_crs(species.shp) == st_crs(france.shp) # petite verif sur CRS
+
+
+species.shp$especes <- factor(ifelse(is.na(species.shp$species), 0, 1))
+str(species.shp$especes)
+
+
+ tm_shape(st_simplify(st_geometry(france.shp)), dTolerance = 100) + # attention il a un simplify pour aller plus vite
+    tm_borders("grey") +
+    tm_shape(species.shp) +
+        tm_dots(alpha = 0.4, col = "especes", palette = c("#8be0b3", "red"))
+
 
 
 #### on va regarder pour les espèces
