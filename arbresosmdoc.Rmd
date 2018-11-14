@@ -62,7 +62,7 @@ sudo -u postgres osm2pgsql -d [sonpetitnom] --slim -C 8000--hstore --multi-geome
 
 Au moment de l'import (mi-otobre) il y avait 762167 lignes correspondant à des arbres isolés (natural=tree). Ils étaient renseignés par 27 champs (en plus de 'tags' et 'natural') completés par 146 champs dans tags. Cela ne fait donc rien que pour les arbres isolés 173 champs. 
 
-Species est le champs le plus renseigné : 98874 valeures non nules, soit près de 13%. 
+Species est le champs le plus renseigné : 98874 valeurs non nulles, soit près de 13%. 
 
 ```{r, include=FALSE}
 
@@ -123,6 +123,8 @@ names_champs[1:30,] %>%
 
 # Répartition du champ "species"
 
+On a une répartition très urbaine des arbres isolés réferencés dans OSM. Difficile à dire si il y a une logique sur ceux possedant une information de type "espèce", il semble cependant qu'il y ait des "clusters"
+
 ```{r, include=FALSE}
 
 france.shp <- st_read(con,  query = "SELECT name, way
@@ -151,4 +153,17 @@ species.shp$especes <- factor(ifelse(is.na(species.shp$species), 0, 1))
     tm_shape(species.shp) +
         tm_dots(alpha = 0.4, col = "especes", palette = c("#8be0b3", "red"))
 ```
+
+Il y a 1813 valeurs différentes. Le wiki indique que "species" doit correspondre au nom latin (binomial).
+
+On trouve plusieurs écart à cette règle :
+
+* Les cas d'une information plus précise  : le cultivar ou la variété de mentionné (avec plusieurs syntaxes possibles)
+* Les cas de nomenclatures différentes : première lettre du descripteur
+* Les erreurs :
+    + Des plantes non ligneuses " iris versicolor" par exemple.
+    + Uniquement le nom du genre : "platanus" / "Platanus"
+    + Des noms vernaculaires, dans des langues variées : "Olivette blanche"
+    + Des choses étranges : "OEIL"
+    + etc...
 

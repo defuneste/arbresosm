@@ -144,7 +144,7 @@ names_champs <- names_champs %>%
 
 names_champs <- names_champs[-c(1:4),] # on retire les valeurs toujours présentes
 
-names_champs[1:100,] %>% # un graph des 30 champs les plus présents
+names_champs[1:30,] %>% # un graph des 30 champs les plus présents
     ggplot( aes(x = reorder(champs, V1), y = V1)) +
     geom_bar(stat = "identity") +
     coord_flip() +
@@ -183,6 +183,8 @@ species.shp <- st_read(con,  query = "SELECT way, tags -> 'species' AS species
 FROM planet_osm_point
 WHERE planet_osm_point.natural = 'tree';")
 
+class(species.shp) # on vérifie la classe
+
 st_crs(species.shp) == st_crs(france.shp) # petite verif sur CRS
 
 
@@ -190,15 +192,23 @@ species.shp$especes <- factor(ifelse(is.na(species.shp$species), 0, 1))
 str(species.shp$especes)
 
 
- tm_shape(st_simplify(st_geometry(france.shp)), dTolerance = 100) + # attention il a un simplify pour aller plus vite
+tm_shape(st_simplify(st_geometry(france.shp)), dTolerance = 100) + # attention il a un simplify pour aller plus vite
     tm_borders("grey") +
     tm_shape(species.shp) +
         tm_dots(alpha = 0.4, col = "especes", palette = c("#8be0b3", "red"))
 
-
-
 #### on va regarder pour les espèces
+# il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
+ 
+# l'attribut species
 
+ length(unique(species.shp$species)) ## il y a 1814 valeures différentes à "species"
+ 
+# on va dropper la geometry pour aller plus vite 
+ 
+species.dat <- st_set_geometry(species.shp, value = NULL)
+class(species.dat) # un df
+ 
 
 
 # se deconnecter de la base
