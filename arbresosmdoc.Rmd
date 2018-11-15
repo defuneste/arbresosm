@@ -121,7 +121,7 @@ names_champs[1:30,] %>%
     xlab("Champs")
 ```
 
-# Répartition du champ "species"
+### Répartition du champ "species"
 
 On a une répartition très urbaine des arbres isolés réferencés dans OSM. Difficile à dire si il y a une logique sur ceux possedant une information de type "espèce", il semble cependant qu'il y ait des "clusters"
 
@@ -147,7 +147,7 @@ WHERE planet_osm_point.natural = 'tree';")
 species.shp$especes <- factor(ifelse(is.na(species.shp$species), 0, 1))
 ```
 
-```{r}
+```{r, fig.align= "center"}
  tm_shape(st_simplify(st_geometry(france.shp)), dTolerance = 100) + # attention il a un simplify pour aller plus vite
     tm_borders("grey") +
     tm_shape(species.shp) +
@@ -166,4 +166,41 @@ On trouve plusieurs écart à cette règle :
     + Des noms vernaculaires, dans des langues variées : "Olivette blanche"
     + Des choses étranges : "OEIL"
     + etc...
+
+#### Prenons le cas des platanes
+
+Pour savoir où en sont les botanistes j'ai utilisé [TRNS](http://tnrs.iplantcollaborative.org/)
+
+```{r}
+#on enléve la geométrie
+species.dat <- st_set_geometry(species.shp, value = NULL)
+# un premier grep pour se rapprocher 
+temp <- unique(species.dat$species)[grep(pattern = "atan", unique(species.dat$species))]  
+# on enleve les érables, tillieul et robinier
+paste("on obtient",  length(temp[grep(pattern = "^A|T|R", temp, invert = T)]), "descripteurs pour platanes")
+
+```
+
+```{r}
+species.dat %>%
+    filter(species %in% temp[grep(pattern = "^A|T|R", temp, invert = T)]) %>%
+    group_by(species) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage))  %>%
+    print(n = Inf)
+```
+
+Ces 32 descripteurs couvrent 15350 arbres. Avant de regarder la botanique en detail il y a plusieurs problèmes. 
+
+##### Les noms de genre :  
+
+Le nom de genre devrait être mis dans l'attribut Key:genus. Selon le wiki osm pour ce dernier il doit être en latin et capitalisé. On retrouve dans cette categorie : platanus, Platanus, platane, platanes, Platanus sp ou encore Platanus n. sp.
+
+##### les fautes de frappes
+
+Elles sont des plusieurs types: 
+* Il y a l'absence de capitalisation du genre, la capitalisation du nom d'espèce et celle du croisememt (moins tranché)
+* La coquille : Platanus aceriofolia
+
+
 

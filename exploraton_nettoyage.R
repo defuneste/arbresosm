@@ -208,8 +208,25 @@ tm_shape(st_simplify(st_geometry(france.shp)), dTolerance = 100) + # attention i
  
 species.dat <- st_set_geometry(species.shp, value = NULL)
 class(species.dat) # un df
- 
 
+unique(species.dat$species)
+
+# vu la diversité on va passer par un cas particulier (les platanes) que l'on va pe étendre 
+
+# un premier grep pour se rapprocher 
+temp <- unique(species.dat$species)[grep(pattern = "atan", unique(species.dat$species))]  
+# on enleve les érables, tillieul et robinier
+temp[grep(pattern = "^A|T|R", temp, invert = T)]
+
+# production d'un tableau d'effectifs des différents platanes
+platanes <- species.dat %>%
+    filter(species %in% temp[grep(pattern = "^A|T|R", temp, invert = T)]) %>%
+    group_by(species) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage))  %>%
+    print(n = Inf)
+
+sum(platanes$comptage)
 
 # se deconnecter de la base
 
