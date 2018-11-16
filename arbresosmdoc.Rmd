@@ -203,4 +203,15 @@ Elles sont des plusieurs types:
 * La coquille : Platanus aceriofolia
 
 
+#### les arbres de reveries et d'OSM
+
+```{r}
+esp <- read.csv("nomsp_nomverma.csv", sep = "\t") # lecture du fichier
+
+species.dat %>%
+    filter(species %in% esp$Species) %>%
+    group_by(species) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage))
+```
 

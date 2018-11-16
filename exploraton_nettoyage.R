@@ -179,7 +179,7 @@ france.shp <- france.shp[france.shp$name != "Toscana" & france.shp$surface_ha > 
 ## faire des cartes avec tmap
 
 # un import plus leger avec les espèces
-species.shp <- st_read(con,  query = "SELECT way, tags -> 'species' AS species
+species.shp <- st_read(con,  query = "SELECT way, tags -> 'species' AS species, tags -> 'genus' AS genus
 FROM planet_osm_point
 WHERE planet_osm_point.natural = 'tree';")
 
@@ -208,6 +208,7 @@ tm_shape(st_simplify(st_geometry(france.shp)), dTolerance = 100) + # attention i
  
 species.dat <- st_set_geometry(species.shp, value = NULL)
 class(species.dat) # un df
+# write.csv(species.dat, "species.dat") je le sauve pour taffer à la maison 
 
 unique(species.dat$species)
 
@@ -227,6 +228,20 @@ platanes <- species.dat %>%
     print(n = Inf)
 
 sum(platanes$comptage)
+
+### présences des " arbres" de reveries dans OSM
+
+esp <- read.csv("nomsp_nomverma.csv", sep = "\t")
+head(esp)
+
+species.dat %>%
+    filter(species %in% esp$Species) %>%
+    group_by(species) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage))
+
+
+
 
 # se deconnecter de la base
 
