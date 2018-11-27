@@ -75,7 +75,7 @@ querychamps <- "SELECT *
                 FROM planet_osm_point
                 WHERE planet_osm_point.natural = 'tree';"
 
-nom_champs <- dbGetQuery(con, query = querychamps)
+nom_champs <- dbGetQuery(con, querychamps)
 dim(nom_champs) # un peu d'info
 str(nom_champs) # un peu d'info
 

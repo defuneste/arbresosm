@@ -45,14 +45,14 @@ CREATE EXTENSION hstore;
 Puis importée via [osm2pgsql](https://wiki.openstreetmap.org/wiki/Osm2pgsql)
 
 ```{bash, , eval = FALSE}
-sudo -u postgres osm2pgsql -d [sonpetitnom] --slim -C 8000--hstore --multi-geometry 
-/home/lo82302h/Téléchargements/france-latest.osm.bz2 -W
+sudo -u postgres osm2pgsql -d [sonpetitnom]--slim --cache 10000 --number-processes 2 --hstore -x --multi-geometry /home/lo82302h/Téléchargements/france-latest.osm.bz2 -W 
 ```
 
 -d indique la DB osmdbfrance \hfill\break
 - -slim permet de sauver les données temporaires dans la DB plutot que dans la RAM \hfill\break
 - -hstore indique qu'il y un type de données hstore (spécifique à postgreSQL) \hfill\break
--C indique la RAM à utilisée \hfill\break
+- -x ajoute les infos extras comme le contributeurs \hfill\break
+-C --cache indique la RAM à utilisée \hfill\break
 - -multi-geometry va créer des geometries multiples plutôt que de séparer en simple \hfill\break
 -W demande le code ici de postgres \hfill\break
 
@@ -203,6 +203,9 @@ Elles sont des plusieurs types:
 * La coquille : Platanus aceriofolia
 
 
+
+
+
 #### les arbres de reveries et d'OSM
 
 ```{r}
@@ -212,6 +215,7 @@ species.dat %>%
     filter(species %in% esp$Species) %>%
     group_by(species) %>%
     summarize(comptage = n()) %>%
-    arrange(desc(comptage))
+    arrange(desc(comptage)) %>%
+    print(n = Inf)
 ```
 
