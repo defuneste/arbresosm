@@ -13,6 +13,7 @@ library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
 ### manip
 library(dplyr) # manip de données en tidyverse
 library(tibble)
+library(lubridate)
 
 ### visualisation
 library(ggplot2) # la visualisation
@@ -39,7 +40,7 @@ drv <- dbDriver("PostgreSQL")
 # fais un pont vers la db réutilisable
 # ici j'ai pris une db en local pour tester
 # con sera utilisé pour chaque connection et pkoi le franciser
-con <- dbConnect(drv, dbname = "osmdbfrance",
+con <- dbConnect(drv, dbname = "osmdbfranceu",
                  host = "localhost", port = 5432, # attention 5432 par défaut
                  user = "postgres", password = pw) # idem pour user
 rm(pw) # mouais
@@ -241,6 +242,21 @@ species.dat %>%
     arrange(desc(comptage))
 
 
+### travail sur osm_user et sur l'encodage des arbres
+
+# import des conributeurs et du moment de la contribution
+user.dat <- dbGetQuery(con,  "SELECT DISTINCT tags -> 'osm_timestamp' AS ts, tags -> 'osm_user' AS user
+FROM planet_osm_point
+WHERE planet_osm_point.natural = 'tree';")
+
+dim(user.dat)
+str(user.dat)
+
+user.dat$ts <- as_date(user.dat$ts) # on passe en POSIX juste date
+
+# j'ai pris la 15aine mais on est presque de l'ordre du jour
+ggplot(user.dat, aes(x = ts)) +
+    geom_histogram(binwidth = 15) +
 
 
 # se deconnecter de la base

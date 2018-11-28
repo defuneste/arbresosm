@@ -28,7 +28,7 @@ library(units) # gestion des unités pour ha
 
 # Jeux de données
 
-Les données sont issues d'un import d'OSM via <https://www.geofabrik.de/>. L'import c'est fait dans une BD Postgresql (10) avec les extensions postgis, postgis_topology et hstore. 
+Les données sont issues d'un import d'OSM via <https://www.geofabrik.de/>. L'import c'est fait dans une BD Postgresql (10) avec les extensions postgis, postgis_topology et hstore. Pour avoir les noms des contributeurs et la date il faut s'identifier sur le site.
 
 ## Création de la BD
 
