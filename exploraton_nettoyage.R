@@ -101,11 +101,11 @@ arbretemp <- nom_champs[,names_champs > 0] # on ne garde que les champs renseign
 # https://www.postgresql.org/docs/current/static/functions-string.html#FUNCTIONS-STRING-FORMAT
 
 #query <- "
-#SELECT format($$SELECT osm_id, h->%s 
-#	SELECT osm_id, tags AS h 
+#SELECT format($$SELECT osm_id, tags->%s 
+#	SELECT osm_id, tags AS tags 
 #	FROM planet_osm_point
 #	WHERE planet_osm_point.natural = 'tree') t;$$
-#	, string_agg(quote_literal(key) || ' AS ' || quote_ident(key), $$, h->$$))
+#	, string_agg(quote_literal(key) || ' AS ' || quote_ident(key), $$, tags->$$))
 #	AS sql   
 #FROM  (
 #   SELECT DISTINCT key
@@ -121,7 +121,7 @@ arbretemp <- nom_champs[,names_champs > 0] # on ne garde que les champs renseign
 # j'ai corrigé le code dans pgadmin et créer une table propre
 # que l'on va importer
 
-arbretemp_tags <- dbGetQuery(con, "SELECT * FROM arbres_osm_tags;")
+arbretemp_tags <- dbGetQuery(con, "SELECT * FROM arbres_osm_point;")
 dim(arbretemp_tags)
 names(arbretemp_tags)
 
@@ -143,7 +143,7 @@ barplot(sort(names_champs$V1, decreasing = T)) # un graphique rapide
 names_champs <- names_champs %>% 
     arrange(desc(V1)) # on range par ordre decroissant
 
-names_champs <- names_champs[-c(1:4),] # on retire les valeurs toujours présentes
+names_champs <- names_champs[-c(1:9),] # on retire les valeurs toujours présentes
 
 names_champs[1:30,] %>% # un graph des 30 champs les plus présents
     ggplot( aes(x = reorder(champs, V1), y = V1)) +
@@ -154,28 +154,33 @@ names_champs[1:30,] %>% # un graph des 30 champs les plus présents
 
 ### un import des regions et de la france
 ## on a toutes les petites îles
+# on a un coin suisse et pas les iles anglo normandes sur data gouv
 
 france.shp <- st_read(con,  query = "SELECT name, way
 FROM planet_osm_polygon
 WHERE boundary = 'administrative'  AND admin_level = '4';")
 
-str(france.shp, max.level = 2) # on regarde un peu l' objet
+str(france.shp, max.level = 2) # on regarde un peu l'objet
 
 plot(france.shp) # on a un paquet de petites Iles non fr
 st_crs(france.shp) # WGS 84 / Pseudo-Mercator
 
-plot(france.shp[france.shp$name == "Formica III",]) # une petite verif sans NSE
+plot(france.shp[france.shp$name == "Solothurn",]) # une petite verif sans NSE
 
-filter(france.shp, name == "Formica III") # une version avec NSE
+france.shp %>% 
+filter(name == "Formica III") # une version avec NSE
 
 france.shp$surface_ha <-  set_units(st_area(france.shp), value = ha) # on calcul la surface en ha
 
+france.shp$name
+
 # on filtre par la surface pour enlever les paradis fiscaux
-# on a encore un problème avc des îles italiennes aux larges de la corse, on vire Toscanna
+# on a encore un problème avc des îles italiennes aux larges de la corse, on vire Toscanna dans les données geofabrik
+# il y a un bout de la suisse dans les données data gouv
 # les objets units doivent être filtrés ou indexés par d'autre objets units d'ou le set_units(x, value = ha)
 # pas certains que dplyr aime du coup c'est du r:base
-plot(france.shp[france.shp$name != "Toscana" & france.shp$surface_ha > set_units(30000, value = ha),])
-france.shp <- france.shp[france.shp$name != "Toscana" & france.shp$surface_ha > set_units(30000, value = ha),]
+plot(france.shp[france.shp$name != "Genève" & france.shp$surface_ha > set_units(30000, value = ha),])
+france.shp <- france.shp[france.shp$name != "Genève" & france.shp$surface_ha > set_units(30000, value = ha),]
 
 ## faire des cartes avec tmap
 
@@ -232,8 +237,7 @@ sum(platanes$comptage)
 
 ### présences des " arbres" de reveries dans OSM
 
-esp <- read.csv("nomsp_nomverma.csv", sep = "\t")
-head(esp)
+esp <- read.csv("nomsp_nomverma.csv", sep = "\t") # sp. de reveries
 
 species.dat %>%
     filter(species %in% esp$Species) %>%
@@ -242,10 +246,10 @@ species.dat %>%
     arrange(desc(comptage))
 
 
-### travail sur osm_user et sur l'encodage des arbres
+######## travail sur osm_user et sur l'encodage des arbres
 
 # import des conributeurs et du moment de la contribution
-user.dat <- dbGetQuery(con,  "SELECT DISTINCT tags -> 'osm_timestamp' AS ts, tags -> 'osm_user' AS user
+user.dat <- dbGetQuery(con,  "SELECT  tags -> 'osm_timestamp' AS ts, tags -> 'osm_user' AS user
 FROM planet_osm_point
 WHERE planet_osm_point.natural = 'tree';")
 
@@ -253,11 +257,46 @@ dim(user.dat)
 str(user.dat)
 
 user.dat$ts <- as_date(user.dat$ts) # on passe en POSIX juste date
+head(user.dat)
 
 # j'ai pris la 15aine mais on est presque de l'ordre du jour
 ggplot(user.dat, aes(x = ts)) +
     geom_histogram(binwidth = 15) +
+    xlab("Années") +
+    ylab("Nb. arbres isolés")
 
+user.dat %>% 
+    #filter(ts > "2018-11-01") %>% 
+    group_by(user) %>% 
+    summarise(nb = n()) %>% 
+    arrange(desc(nb))
+
+    print(n = Inf)
+
+
+user.dat %>% 
+    group_by(user) %>% 
+    summarise(nb = n()) %>% 
+ggplot(aes(x = nb)) +
+    geom_histogram(binwidth = 50) 
+
++ 
+    scale_x_log10()
+
+%>%  
+    
+    group_by(nb) %>% 
+    summarise(n()) %>%
+    print(n = Inf)
+    
+    
+
+    
+
+
+
+# des greps pour tester des pseudo de com com
+# unique(user.dat$user)[grep(pattern = "Paris|paris", unique(user.dat$user))]
 
 # se deconnecter de la base
 

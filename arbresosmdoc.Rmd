@@ -13,6 +13,7 @@ library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
 ### manip
 library(dplyr) # manip de données en tidyverse
 library(tibble)
+library(lubridate)
 
 ### visualisation
 library(ggplot2) # la visualisation
@@ -29,6 +30,7 @@ library(units) # gestion des unités pour ha
 # Jeux de données
 
 Les données sont issues d'un import d'OSM via <https://www.geofabrik.de/>. L'import c'est fait dans une BD Postgresql (10) avec les extensions postgis, postgis_topology et hstore. Pour avoir les noms des contributeurs et la date il faut s'identifier sur le site.
+NB : modif novembre on a pris la source de datagouv 
 
 ## Création de la BD
 
@@ -60,9 +62,9 @@ sudo -u postgres osm2pgsql -d [sonpetitnom]--slim --cache 10000 --number-process
 
 ## stats de base
 
-Au moment de l'import (mi-otobre) il y avait 762167 lignes correspondant à des arbres isolés (natural=tree). Ils étaient renseignés par 27 champs (en plus de 'tags' et 'natural') completés par 146 champs dans tags. Cela ne fait donc rien que pour les arbres isolés 173 champs. 
+Au moment de l'import (mi-otobre) il y avait 828488 lignes correspondant à des arbres isolés (natural=tree). Ils étaient renseignés par 29 champs (en plus de 'tags' et 'natural') completés par 162 champs dans tags. Cela ne fait donc rien que pour les arbres isolés 191 champs. 
 
-Species est le champs le plus renseigné : 98874 valeurs non nulles, soit près de 13%. 
+Species est le champs le plus renseigné : 99032 valeurs non nulles, soit près de 12%. 
 
 ```{r, include=FALSE}
 
@@ -77,12 +79,12 @@ drv <- dbDriver("PostgreSQL")
 # fais un pont vers la db réutilisable
 # ici j'ai pris une db en local pour tester
 # con sera utilisé pour chaque connection et pkoi le franciser
-con <- dbConnect(drv, dbname = "osmdbfrance",
+con <- dbConnect(drv, dbname = "osmgouv",
                  host = "localhost", port = 5432, # attention 5432 par défaut
                  user = "postgres", password = pw) # idem pour user
 rm(pw) # mouais
 
-arbretemp_tags <- dbGetQuery(con, "SELECT * FROM arbres_osm_tags;")
+arbretemp_tags <- dbGetQuery(con, "SELECT * FROM arbres_osm_point;")
 dim(arbretemp_tags)
 names(arbretemp_tags)
 
@@ -154,7 +156,7 @@ species.shp$especes <- factor(ifelse(is.na(species.shp$species), 0, 1))
         tm_dots(alpha = 0.4, col = "especes", palette = c("#8be0b3", "red"))
 ```
 
-Il y a 1813 valeurs différentes. Le wiki indique que "species" doit correspondre au nom latin (binomial).
+Il y a 1846 valeurs différentes. Le wiki indique que "species" doit correspondre au nom latin (binomial).
 
 On trouve plusieurs écart à cette règle :
 
@@ -190,7 +192,7 @@ species.dat %>%
     print(n = Inf)
 ```
 
-Ces 32 descripteurs couvrent 15350 arbres. Avant de regarder la botanique en detail il y a plusieurs problèmes. 
+Ces 33 descripteurs couvrent 15415 arbres. Avant de regarder la botanique en detail il y a plusieurs problèmes. 
 
 ##### Les noms de genre :  
 
@@ -202,9 +204,27 @@ Elles sont des plusieurs types:
 * Il y a l'absence de capitalisation du genre, la capitalisation du nom d'espèce et celle du croisememt (moins tranché)
 * La coquille : Platanus aceriofolia
 
+##### Les debats botaniques
+
+Il y aussi les noms latins non tranchés chez les botanistes, les problèmes avec les croissements, les cultivars et variétés mis au niveau de l'espéce, etc. 
 
 
+### Utilisateurs et source de données 
 
+```{r}
+# import des conributeurs et du moment de la contribution
+user.dat <- dbGetQuery(con,  "SELECT DISTINCT tags -> 'osm_timestamp' AS ts, tags -> 'osm_user' AS user
+FROM planet_osm_point
+WHERE planet_osm_point.natural = 'tree';")
+user.dat$ts <- as_date(user.dat$ts) # on passe en POSIX juste date
+# j'ai pris la 15aine mais on est presque de l'ordre du jour
+ggplot(user.dat, aes(x = ts)) +
+    geom_histogram(binwidth = 15) +
+    xlab("Années") +
+    ylab("Nb. arbres isolés")
+```
+
+On a 2657 osm_users qui ont rentrés des arbres. 
 
 #### les arbres de reveries et d'OSM
 
@@ -218,4 +238,7 @@ species.dat %>%
     arrange(desc(comptage)) %>%
     print(n = Inf)
 ```
+
+
+
 
