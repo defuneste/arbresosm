@@ -139,8 +139,8 @@ france.shp$surface_ha <-  set_units(st_area(france.shp), value = ha) # on calcul
 # on a encore un problème avc des îles italiennes aux larges de la corse, on vire Toscanna
 # les objets units doivent être filtrés ou indexés par d'autre objets units d'ou le set_units(x, value = ha)
 # pas certains que dplyr aime du coup c'est du r:base
-plot(france.shp[france.shp$name != "Toscana" & france.shp$surface_ha > set_units(30000, value = ha),])
-france.shp <- france.shp[france.shp$name != "Toscana" & france.shp$surface_ha > set_units(30000, value = ha),]
+plot(france.shp[france.shp$name != "Genève" & france.shp$surface_ha > set_units(30000, value = ha),])
+france.shp <- france.shp[france.shp$name != "Genève" & france.shp$surface_ha > set_units(30000, value = ha),]
 
 species.shp <- st_read(con,  query = "SELECT way, tags -> 'species' AS species
 FROM planet_osm_point
@@ -213,7 +213,7 @@ Il y aussi les noms latins non tranchés chez les botanistes, les problèmes ave
 
 ```{r}
 # import des conributeurs et du moment de la contribution
-user.dat <- dbGetQuery(con,  "SELECT DISTINCT tags -> 'osm_timestamp' AS ts, tags -> 'osm_user' AS user
+user.dat <- dbGetQuery(con,  "SELECT tags -> 'osm_timestamp' AS ts, tags -> 'osm_user' AS user
 FROM planet_osm_point
 WHERE planet_osm_point.natural = 'tree';")
 user.dat$ts <- as_date(user.dat$ts) # on passe en POSIX juste date
