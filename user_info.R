@@ -70,7 +70,7 @@ ggplot(user.dat, aes(x = ts)) +
     ylab("Nb. arbres isolés")
 
 # liste des utilisteurs avec le nombre d'arbres
-profil_user.dat <- user.dat %>% 
+liste_user.dat <- user.dat %>% 
     #filter(ts > "2018-11-01") %>% 
     group_by(nom) %>% 
     summarise(nb_arbre = n(),
@@ -82,9 +82,11 @@ profil_user.dat <- user.dat %>%
 nb_jour <- user.dat %>% 
     #filter(ts > "2018-11-01") %>% 
     group_by(nom, ts) %>% 
-    summarise(tot = 1) %>%
+    summarise(tot = 1,
+              arbre_date = n()) %>%
     group_by(nom) %>% 
-    summarise(nb_jour =  sum(tot))
+    summarise(nb_jour =  sum(tot),
+              max_arbre_jour = max(arbre_date))
 
 # une petite verification avec une user
 
@@ -93,13 +95,14 @@ user.dat %>%
     distinct(ts)
 
 # join attention sur le meme nom
-profil_user.dat <- profil_user.dat %>%
+liste_user.dat <- liste_user.dat %>%
     left_join(nb_jour, by = "nom")
 
-dim(profil_user.dat)
+dim(liste_user.dat)
 
 ## constitution d'un tableau pour les profils d'utilisteurs : 
 
+# nb de polygones
 poly_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS poly_count
                              FROM planet_osm_polygon
                              WHERE  tags -> 'osm_user' IN (SELECT DISTINCT tags -> 'osm_user' AS nom
@@ -109,7 +112,7 @@ poly_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) A
                              ORDER BY poly_count DESC;")
 dim(poly_count.dat)
 
-
+#nb de lignes
 ligne_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS ligne_count
                               FROM planet_osm_roads
                               WHERE  tags -> 'osm_user' IN (SELECT DISTINCT tags -> 'osm_user' AS nom
@@ -119,7 +122,7 @@ ligne_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) 
                               ORDER BY ligne_count DESC;" )
 dim(ligne_count.dat)
 
-
+# nb de poi
 poi_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS poi_count
                             FROM planet_osm_point
                             WHERE  tags -> 'osm_user' IN (SELECT DISTINCT tags -> 'osm_user' AS nom
@@ -129,17 +132,28 @@ poi_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS
                             ORDER BY poi_count DESC;")
 dim(poi_count.dat)
 
-# join attention meme nom 
+# join et passage des na en 0 
 
-profil_user.dat <- profil_user.dat %>%
+profil_user.dat <- liste_user.dat %>%
     left_join(poi_count.dat, by = "nom") %>%
     left_join(ligne_count.dat, by = "nom") %>% 
     left_join(poly_count.dat , by = "nom") %>% 
-    replace_na(0)
+    replace_na(list(ligne_count = 0, poly_count = 0)) %>%
+    mutate(type = factor(case_when(max_arbre_jour == 1 ~ "[1]",
+                            max_arbre_jour > 1 & max_arbre_jour < 6 ~ "[2:5]",
+                            max_arbre_jour > 5 & max_arbre_jour < 51 ~ "[6:50]",
+                            max_arbre_jour > 50 & max_arbre_jour < 201 ~ "[51:200]",
+                            max_arbre_jour > 200 ~ "[201+"
+                            ), levels = c("[1]", "[2:5]", "[6:50]", "[51:200]", "[201+"),
+                         labels = c("[1]", "[2:5]", "[6:50]", "[51:200]", "[201+"), ordered = T))
 
+
+plot(profil_user.dat$nb_arbre, profil_user2.dat$arbre_jour)
+
+summary(profil_user.dat)
 
 # sauver si besoin
-write.csv(profil_user.dat, "profile.csv")
+write.csv(profil_user.dat2, "profile.csv")
 
 # des greps pour tester des pseudo de com com
 # unique(user.dat$user)[grep(pattern = "Paris|paris", unique(user.dat$user))]
