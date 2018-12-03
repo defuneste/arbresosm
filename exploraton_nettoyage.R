@@ -13,6 +13,7 @@ library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
 ### manip
 library(dplyr) # manip de données en tidyverse
 library(tibble)
+library(tidyr)
 library(lubridate)
 
 ### visualisation

@@ -13,6 +13,7 @@ library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
 ### manip
 library(dplyr) # manip de données en tidyverse
 library(tibble)
+library(tidyr)
 library(lubridate)
 
 ### visualisation
@@ -133,8 +134,11 @@ dim(poi_count.dat)
 profil_user.dat <- profil_user.dat %>%
     left_join(poi_count.dat, by = "nom") %>%
     left_join(ligne_count.dat, by = "nom") %>% 
-    left_join(poly_count.dat , by = "nom") 
-    
+    left_join(poly_count.dat , by = "nom") %>% 
+    replace_na(0)
+
+
+# sauver si besoin
 write.csv(profil_user.dat, "profile.csv")
 
 # des greps pour tester des pseudo de com com
