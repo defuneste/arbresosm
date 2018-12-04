@@ -75,7 +75,8 @@ liste_user.dat <- user.dat %>%
     group_by(nom) %>% 
     summarise(nb_arbre = n(),
               duree = max(ts) - min(ts)) %>% 
-    arrange(desc(nb_arbre))
+    arrange(desc(nb_arbre)) 
+
 
 ## comptage du nombre de jour ou un arbre à été ajouté modifié
 
@@ -132,25 +133,37 @@ poi_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS
                             ORDER BY poi_count DESC;")
 dim(poi_count.dat)
 
-# join et passage des na en 0 
+# join et passage des na en 0 , on fait aussi une typo en fonction du1/9/90
 
 profil_user.dat <- liste_user.dat %>%
     left_join(poi_count.dat, by = "nom") %>%
     left_join(ligne_count.dat, by = "nom") %>% 
     left_join(poly_count.dat , by = "nom") %>% 
     replace_na(list(ligne_count = 0, poly_count = 0)) %>%
-    mutate(type = factor(case_when(max_arbre_jour == 1 ~ "[1]",
-                            max_arbre_jour > 1 & max_arbre_jour < 6 ~ "[2:5]",
-                            max_arbre_jour > 5 & max_arbre_jour < 51 ~ "[6:50]",
-                            max_arbre_jour > 50 & max_arbre_jour < 201 ~ "[51:200]",
-                            max_arbre_jour > 200 ~ "[201+"
-                            ), levels = c("[1]", "[2:5]", "[6:50]", "[51:200]", "[201+"),
-                         labels = c("[1]", "[2:5]", "[6:50]", "[51:200]", "[201+"), ordered = T))
+    mutate(ranking = 1:length(liste_user.dat$nom),
+           type_user = factor(case_when(ranking <= round(length(liste_user.dat$nom)/100) ~ "1%", 
+                                 ranking > round(length(liste_user.dat$nom)/100)  &
+                                 ranking <= round((length(liste_user.dat$nom)/100)*10) ~ "9%",
+                                 ranking > round((length(liste_user.dat$nom)/100)*10) ~ "90%")
+                              , levels = c("90%","9%","1%"), ordered = T))
 
+## une petite verif
+table(profil_user.dat$type_user)
+
+# graph des sum des 90/9/1
+ggplot(profil_user.dat, aes(y = nb_arbre, x = type_user)) +
+    geom_bar(stat = "summary_bin", fun.y = "sum") +
+    scale_x_discrete("Contributeurs") +
+    scale_y_continuous("Nombres d'arbres")
+
+
+tail(profil_user.dat)
 
 plot(profil_user.dat$nb_arbre, profil_user2.dat$arbre_jour)
 
 summary(profil_user.dat)
+
+profil_user.dat$type_user
 
 # sauver si besoin
 write.csv(profil_user.dat2, "profile.csv")
