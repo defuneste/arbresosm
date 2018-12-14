@@ -194,14 +194,15 @@ class(species.shp) # on vérifie la classe
 st_crs(species.shp) == st_crs(france.shp) # petite verif sur CRS
 
 
-species.shp$especes <- factor(ifelse(is.na(species.shp$species), 0, 1))
+species.shp$especes <- factor(ifelse(is.na(species.shp$species), "Non renseigné", "Renseigné"))
 str(species.shp$especes)
 
 
 tm_shape(st_simplify(st_geometry(france.shp)), dTolerance = 100) + # attention il a un simplify pour aller plus vite
     tm_borders("grey") +
     tm_shape(species.shp) +
-        tm_dots(alpha = 0.4, col = "especes", palette = c("#8be0b3", "red"))
+        tm_dots(alpha = 0.4, col = "especes", palette = c("#8be0b3", "red"), title = "Key:species") +
+    tm_scale_bar(position = c( "center", "BOTTOM"))
 
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
@@ -245,6 +246,39 @@ species.dat %>%
     summarize(comptage = n()) %>%
     arrange(desc(comptage))
 
+
+### présences des arbres par land use 
+
+# import du corine land cover de 2012, source espace EVS
+luluc.shp <- st_read("CLC12_FR_RGF.shp")
+
+sort(unique(luluc.shp$CODE_12))
+
+# une variable au niveau du land cover 
+
+luluc.shp <- luluc.shp %>%
+    mutate(CODE_12 = as.numeric(levels(CODE_12))[CODE_12],
+        niv1 = case_when(
+        CODE_12 < 200 ~ "1",
+        CODE_12 > 200 & CODE_12 < 300 ~ "2",
+        CODE_12 > 300 & CODE_12 < 400 ~ "3",
+        CODE_12 > 400 & CODE_12 < 500 ~ "4",
+        CODE_12 > 500 ~ "5"
+    ))
+
+attributes(luluc.shp)
+st_agr(luluc.shp) <- c("identity", "constant", "aggregate", "constant")
+
+head(luluc.shp)
+
+luluc_niv1  <- luluc.shp %>%
+    group_by(niv1) %>%
+    summarise(somme = sum(AREA_HA)) 
+luluc_niv1 
+
+plot(luluc_niv1)
+
+st_write(luluc_niv1, "luluc_niv1.shp")
 
 # se deconnecter de la base
 
