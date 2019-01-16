@@ -27,7 +27,7 @@ library(rgdal) #gdal pour projection, crud et surtout export
 library(rgeos) # geos, penser à installer libgeos++-dev avant, travail avec objet sp
 library(sf) # nouveau package de classes et methodes spatiales doit "remplacer" rgdal et rgeos (et ofc sp) 
 library(units) # gestion des unités pour ha
-
+library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
 
 # il faut établir une connexion 
 
@@ -271,14 +271,25 @@ st_agr(luluc.shp) <- c("identity", "constant", "aggregate", "constant")
 
 head(luluc.shp)
 
+# luluc_simplify.shp <- ms_simplify(luluc.shp, keep = 0.25,
+#                                  keep_shapes = TRUE)
+
 luluc_niv1  <- luluc.shp %>%
+    select(niv1) %>%
     group_by(niv1) %>%
-    summarise(somme = sum(AREA_HA)) 
+    summarise(compte = n()) 
 luluc_niv1 
 
 plot(luluc_niv1)
 
 st_write(luluc_niv1, "luluc_niv1.shp")
+
+
+### circonference 
+
+unique(arbres_osm$circumference)
+unique(arbres_osm$diameter_crown)
+
 
 # se deconnecter de la base
 
