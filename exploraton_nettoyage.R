@@ -288,8 +288,12 @@ st_write(luluc_niv1, "luluc_niv1.shp")
 ### circonference 
 
 unique(arbres_osm$circumference)
-unique(arbres_osm$diameter_crown)
 
+### diamètre de la couronne 
+
+unique(arbres_osm$diameter_crown)
+table((as.integer(arbres_osm$diameter_crown)))
+hist(as.integer(arbres_osm$diameter_crown), breaks = 1:max(as.integer(arbres_osm$diameter_crown), na.rm = T))
 
 # se deconnecter de la base
 
