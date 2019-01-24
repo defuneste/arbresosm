@@ -295,6 +295,11 @@ unique(arbres_osm$diameter_crown)
 table((as.integer(arbres_osm$diameter_crown)))
 hist(as.integer(arbres_osm$diameter_crown), breaks = 1:max(as.integer(arbres_osm$diameter_crown), na.rm = T))
 
+### start_date
+
+unique(arbres_osm$start_date)
+unique(arbres_osm$`start_date:FR:plantation`)
+
 # se deconnecter de la base
 
 dbDisconnect(con)
