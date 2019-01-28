@@ -187,7 +187,7 @@ arbres_lyon_final.shp <- arbres_lyon.shp %>%
          "source:name" = "Arbres d'alignement de la métropole de Lyon",
          "source:addr" = "https://data.grandlyon.com/") %>%
   select(-hauteurfut, -diametreco, -rayoncouro, -circonfere, -anneeplant, -architectu, -localisati, -naturereve, -surfacecad, 
-         -mobilierur, -commune, -codefuv, -nomvoie, -identifian, -numero, -codegenre, -filtre, -espece)
+         -mobilierur, -commune, -codefuv, -nomvoie, -identifian, -numero, -codegenre, -filtre, -espece, -gid)
 names(arbres_lyon_final.shp)
 ```
 
