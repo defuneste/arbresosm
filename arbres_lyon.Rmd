@@ -184,8 +184,8 @@ arbres_lyon_final.shp <- arbres_lyon.shp %>%
          `start_date:FR:plantation` = dateplanta,
          taxon = essence) %>%
   mutate(diameter_crown = rayoncouro * 2,
-         "source:name" == "Arbres d'alignement de la métropole de Lyon",
-         "source:addr" == "https://data.grandlyon.com/") %>%
+         "source:name" = "Arbres d'alignement de la métropole de Lyon",
+         "source:addr" = "https://data.grandlyon.com/") %>%
   select(-hauteurfut, -diametreco, -rayoncouro, -circonfere, -anneeplant, -architectu, -localisati, -naturereve, -surfacecad, 
          -mobilierur, -commune, -codefuv, -nomvoie, -identifian, -numero, -codegenre, -filtre, -espece)
 names(arbres_lyon_final.shp)
@@ -200,7 +200,7 @@ for(i in 1:longueur) {
   outlist[[i]] <- arbres_lyon_final.shp %>%
                         filter(codeinsee == unique(arbres_lyon_final.shp$codeinsee)[i]) 
   # on écrit des tas de fichiers 
-st_write(outlist[[i]], dsn = paste0(unique(arbres_lyon_final.shp$codeinsee)[i], ".shp"))
+st_write(outlist[[i]], dsn = paste0(unique(arbres_lyon_final.shp$codeinsee)[i], ".geojson"))
 }
 
 ```
