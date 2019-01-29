@@ -191,7 +191,7 @@ arbres_lyon_final.shp <- arbres_lyon.shp %>%
 names(arbres_lyon_final.shp)
 ```
 
-```{r, sous fichiers pour facilier l'export}
+```{r, message=FALSE, sous fichiers pour facilier l'export}
 outlist <- list() # initialisation d'un liste
 longueur <- length(unique(arbres_lyon_final.shp$codeinsee)) # le nombre de fichier souhaité
 
