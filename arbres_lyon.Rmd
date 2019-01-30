@@ -191,6 +191,16 @@ arbres_lyon_final.shp <- arbres_lyon.shp %>%
 names(arbres_lyon_final.shp)
 ```
 
+#### rajout de Leaf_type et Leaf_cycle
+
+```{r, import du csv d'après le wiki}
+leaf <- read.csv2("leaft_type.csv", sep = "\t")
+```
+
+
+
+### export
+
 ```{r, message=FALSE, sous fichiers pour facilier l'export}
 outlist <- list() # initialisation d'un liste
 longueur <- length(unique(arbres_lyon_final.shp$codeinsee)) # le nombre de fichier souhaité
