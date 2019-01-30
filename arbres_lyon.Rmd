@@ -55,6 +55,7 @@ Dans le cadre d'OSM je pense qu'il ne faut pas garder ces lignes ("on cartograph
 arbres_lyon.shp$filtre <- 0
 arbres_lyon.shp$filtre[arbres_lyon.shp$genre == "Emplacement libre"] <- 1
 arbres_lyon.shp$filtre[arbres_lyon.shp$genre == "souche"] <- 1
+arbres_lyon.shp$filtre[arbres_lyon.shp$genre == "Souche"] <- 1
 arbres_lyon.shp$filtre[arbres_lyon.shp$genre == "Non défini"] <- 1
 arbres_lyon.shp <-arbres_lyon.shp %>%
  filter(filtre == 0)
@@ -203,8 +204,8 @@ Le fichier CSV provient du [wiki](https://wiki.openstreetmap.org/wiki/FR:Tag:nat
 Il pose un probleme interessant : des genres peuvent avoir des espèces décidues (deciduous) et sempervirentes (evergreen) : dans les chênes il y a les chênes pubescents et les chênes verts. 
 
 ```{r}
-sort(unique(arbres_lyon_final.shp$genre)[unique(arbres_lyon_final.shp$genus) %in% leaf$Genus]) # liste des genres presents
-sort(unique(arbres_lyon_final.shp$genre)[!(unique(arbres_lyon_final.shp$genus) %in% leaf$Genus)]) # liste des genres absents
+sort(unique(arbres_lyon_final.shp$genus)[unique(arbres_lyon_final.shp$genus) %in% leaf$Genus]) # liste des genres presents
+sort(unique(arbres_lyon_final.shp$genus)[!(unique(arbres_lyon_final.shp$genus) %in% leaf$Genus)]) # liste des genres absents
 ```
 
 
