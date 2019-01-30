@@ -195,8 +195,17 @@ names(arbres_lyon_final.shp)
 
 ```{r, import du csv d'après le wiki}
 leaf <- read.csv2("leaft_type.csv", sep = "\t")
+summary(leaf)
 ```
 
+Le fichier CSV provient du [wiki](https://wiki.openstreetmap.org/wiki/FR:Tag:natural%3Dtree).
+
+Il pose un probleme interessant : des genres peuvent avoir des espèces décidues (deciduous) et sempervirentes (evergreen) : dans les chênes il y a les chênes pubescents et les chênes verts. 
+
+```{r}
+sort(unique(arbres_lyon_final.shp$genre)[unique(arbres_lyon_final.shp$genus) %in% leaf$Genus]) # liste des genres presents
+sort(unique(arbres_lyon_final.shp$genre)[!(unique(arbres_lyon_final.shp$genus) %in% leaf$Genus)]) # liste des genres absents
+```
 
 
 ### export
