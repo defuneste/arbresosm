@@ -30,6 +30,8 @@ Le fichier comprends `r dim(arbres_lyon.shp)[1]` arbres et `r dim(arbres_lyon.sh
 
 ### Espèce / species et genre / genus 
 
+#### genre
+
 ```{r, genre}
 sort(unique(arbres_lyon.shp$genre))
 ```
@@ -51,7 +53,7 @@ Cette liste comprend trois valeurs étranges :
 
 Dans le cadre d'OSM je pense qu'il ne faut pas garder ces lignes ("on cartographie le terrain"). 
 
-```{r}
+```{r, correction des "non-genres"}
 arbres_lyon.shp$filtre <- 0
 arbres_lyon.shp$filtre[arbres_lyon.shp$genre == "Emplacement libre"] <- 1
 arbres_lyon.shp$filtre[arbres_lyon.shp$genre == "souche"] <- 1
@@ -61,6 +63,19 @@ arbres_lyon.shp <-arbres_lyon.shp %>%
  filter(filtre == 0)
 ```
 
+
+Il y a egalement deux valeurs manquantes (NA) pour genre. Ce sont deux Hibiscus
+
+```{r}
+arbres_lyon.shp[is.na(arbres_lyon.shp$genre),] # ici on verifie les na 
+#genre est un facteur, je le garde comme tel mais on pourrait aussi s'en passer
+levels(arbres_lyon.shp$genre) <- c(levels(arbres_lyon.shp$genre), "Hibiscus") 
+arbres_lyon.shp$genre[is.na(arbres_lyon.shp$genre)] <- "Hibiscus"
+```
+
+
+
+#### espèce
 
 ```{r, espece}
 sort(unique(arbres_lyon.shp$espece))
@@ -203,9 +218,17 @@ Le fichier CSV provient du [wiki](https://wiki.openstreetmap.org/wiki/FR:Tag:nat
 
 Il pose un probleme interessant : des genres peuvent avoir des espèces décidues (deciduous) et sempervirentes (evergreen) : dans les chênes il y a les chênes pubescents et les chênes verts. 
 
-```{r}
+```{r, verfication des genres presents}
 sort(unique(arbres_lyon_final.shp$genus)[unique(arbres_lyon_final.shp$genus) %in% leaf$Genus]) # liste des genres presents
 sort(unique(arbres_lyon_final.shp$genus)[!(unique(arbres_lyon_final.shp$genus) %in% leaf$Genus)]) # liste des genres absents
+```
+
+```{r, corrections de thuya, pirus et eudio}
+## attention facteurs
+levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Thuya"] <- "Thuja"
+levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Pirus"] <- "Pyrus"
+levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Evodia"] <- "Euodia"
+
 ```
 
 
