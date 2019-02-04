@@ -198,13 +198,14 @@ arbres_lyon_final.shp <- arbres_lyon.shp %>%
          "species:fr" = essencefra, 
          height = hauteurtot,
          `start_date:FR:plantation` = dateplanta,
-         taxon = essence) %>%
+         taxon = essence,
+         "ref:FR:Lyon:tree" = gid) %>%
   mutate(diameter_crown = rayoncouro * 2,
          "source:name" = "Arbres d'alignement de la métropole de Lyon",
          "source:addr" = "https://data.grandlyon.com/") %>%
   select(-hauteurfut, -diametreco, -rayoncouro, -circonfere, -anneeplant, -architectu, -localisati, -naturereve, -surfacecad, 
-         -mobilierur, -commune, -codefuv, -nomvoie, -identifian, -numero, -codegenre, -filtre, -espece, -gid)
-names(arbres_lyon_final.shp)
+         -mobilierur, -commune, -codefuv, -nomvoie, -identifian, -numero, -codegenre, -filtre, -espece)
+summary(arbres_lyon_final.shp)
 ```
 
 #### rajout de Leaf_type et Leaf_cycle
