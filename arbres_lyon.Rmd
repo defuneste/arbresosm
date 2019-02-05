@@ -208,11 +208,22 @@ arbres_lyon_final.shp <- arbres_lyon.shp %>%
 summary(arbres_lyon_final.shp)
 ```
 
+
+```{r, corrections de thuya, pirus et eudio}
+## attention facteurs
+levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Thuya"] <- "Thuja"
+levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Pirus"] <- "Pyrus"
+levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Evodia"] <- "Euodia"
+
+```
+
+
 #### rajout de Leaf_type et Leaf_cycle
 
 ```{r, import du csv d'après le wiki}
-leaf <- read.csv2("leaft_type.csv", sep = "\t")
-summary(leaf)
+leaf <- read.csv2("leaft_type.csv", sep = "\t", stringsAsFactors = FALSE)
+leaf[leaf$leaf_cycle == "evergreen and deciduous",] <- "deciduous and evergreen"
+head(leaf)
 ```
 
 Le fichier CSV provient du [wiki](https://wiki.openstreetmap.org/wiki/FR:Tag:natural%3Dtree).
@@ -224,12 +235,17 @@ sort(unique(arbres_lyon_final.shp$genus)[unique(arbres_lyon_final.shp$genus) %in
 sort(unique(arbres_lyon_final.shp$genus)[!(unique(arbres_lyon_final.shp$genus) %in% leaf$Genus)]) # liste des genres absents
 ```
 
-```{r, corrections de thuya, pirus et eudio}
-## attention facteurs
-levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Thuya"] <- "Thuja"
-levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Pirus"] <- "Pyrus"
-levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Evodia"] <- "Euodia"
+```{r, ajout des genres manquants}
+leaf2 <- read.csv2("leaf_type_ajout.csv", sep = "\t", stringsAsFactors = FALSE)
+summary(leaf2)
+leaf_tot <- rbind(leaf,leaf2)
+summary(leaf_tot)
+```
 
+```{r, join sur genus}
+arbres_lyon_final.shp <- arbres_lyon_final.shp %>%
+                left_join(leaf_tot, by = c("genus" = "Genus"))
+summary(arbres_lyon_final.shp)
 ```
 
 
