@@ -18,4 +18,18 @@ class(quartier)
 
 carto_lyon <- leaflet() %>%
     addTiles() %>%
-    addMarkers(data = quartier)
+    addCircleMarkers(data = quartier, radius = 2, 
+                     color = ~pal(localisati))
+
+carto_lyon
+
+## les categories de denotation
+
+summary(arbres_lyon_final.shp$localisati)
+
+pal <- colorFactor(palette =c("green", "red", "brown", "grey", "pink"),
+                   levels = c("Espace vert", "Lieu de stationnement ", "Terre plein latéral",
+                              "TPC ou rond point", "Trottoir ou domaine piétonnier"))
+
+
+
