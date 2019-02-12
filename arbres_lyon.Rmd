@@ -202,7 +202,8 @@ arbres_lyon_final.shp <- arbres_lyon.shp %>%
          "ref:FR:Lyon:tree" = gid) %>%
   mutate(diameter_crown = rayoncouro * 2,
          "source:name" = "Arbres d'alignement de la métropole de Lyon",
-         "source:addr" = "https://data.grandlyon.com/") %>%
+         "source:addr" = "https://data.grandlyon.com/",
+         denotation = "avenue") %>%
   select(-hauteurfut, -diametreco, -rayoncouro, -circonfere, -anneeplant, -architectu, -naturereve, -surfacecad, 
          -mobilierur, -commune, -codefuv, -nomvoie, -identifian, -numero, -codegenre, -filtre, -espece)
 summary(arbres_lyon_final.shp)
