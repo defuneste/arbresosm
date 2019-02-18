@@ -14,7 +14,7 @@ library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
 library(dplyr) # manip de données en tidyverse
 library(tibble)
 library(tidyr)
-library(lubridate)
+library(lubridate) # date
 
 ### visualisation
 library(ggplot2) # la visualisation
@@ -204,15 +204,35 @@ tm_shape(st_simplify(st_geometry(france.shp)), dTolerance = 100) + # attention i
         tm_dots(alpha = 0.4, col = "especes", palette = c("#8be0b3", "red"), title = "Key:species") +
     tm_scale_bar(position = c( "center", "BOTTOM"))
 
+
+##### les genres dans OSM france 
+
+# on va commencer par dropper la geometrie pour une première analyse et aller plus vite 
+
+species.dat <- st_set_geometry(species.shp, value = NULL)
+class(species.dat) # un df
+
+sort(table(species.dat$genus), decreasing =  T)
+
+length(sort(table(species.dat$genus), decreasing =  T)) # 265 genres avant nettoyage
+
+sum(table(species.dat$genus)) # 80170 renseignements dans "genus"
+
+# des greps pour verifier 
+unique(species.dat$genus)[grep(pattern = "^[[:lower:]]", unique(species.dat$genus))] # genres commencant par une minuscule
+unique(species.dat$genus)[grep(pattern = "\\s", unique(species.dat$genus))] # genres contenant un espace
+unique(species.dat$genus)[grep(pattern = "\\;", unique(species.dat$genus))] # genres contenant un ;
+
+
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
- 
+
 # l'attribut species
 
- length(unique(species.shp$species)) ## il y a 1814 valeures différentes à "species"
- 
+length(unique(species.shp$species)) ## il y a 1814 valeures différentes à "species"
+
 # on va dropper la geometry pour aller plus vite 
- 
+
 species.dat <- st_set_geometry(species.shp, value = NULL)
 class(species.dat) # un df
 # write.csv(species.dat, "species.dat") je le sauve pour taffer à la maison 
