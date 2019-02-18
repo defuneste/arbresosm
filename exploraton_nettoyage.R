@@ -15,6 +15,7 @@ library(dplyr) # manip de données en tidyverse
 library(tibble)
 library(tidyr)
 library(lubridate) # date
+library(stringr) # modif sur character
 
 ### visualisation
 library(ggplot2) # la visualisation
@@ -223,6 +224,15 @@ unique(species.dat$genus)[grep(pattern = "^[[:lower:]]", unique(species.dat$genu
 unique(species.dat$genus)[grep(pattern = "\\s", unique(species.dat$genus))] # genres contenant un espace
 unique(species.dat$genus)[grep(pattern = "\\;", unique(species.dat$genus))] # genres contenant un ;
 
+# on capitalise la premiere lettre et on ne garde pas ceux absent dans les nom capitalisé
+genus_upper <- str_to_title(unique(species.dat$genus)[grep(pattern = "^[[:lower:]]", unique(species.dat$genus))])
+
+mauvais_genre <- genus_upper[!genus_upper %in% unique(species.dat$genus)]
+mauvais_genre_decompte <- species.dat %>%
+    filter(genus %in% str_to_lower(mauvais_genre)) %>%
+    group_by(genus) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage)) 
 
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
