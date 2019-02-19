@@ -241,6 +241,11 @@ bon_genre_decompte <- species.dat %>%
     summarize(comptage = n()) %>%
     arrange(desc(comptage)) 
 
+# genre comprenant un espace et ayant donc plusieurs mots
+
+espece_genre <- unique(species.dat$genus)[grep(pattern = "\\s", unique(species.dat$genus))] 
+espece_genre <- espece_genre[!espece_genre %in% unique(species.dat$species)]
+
 
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
