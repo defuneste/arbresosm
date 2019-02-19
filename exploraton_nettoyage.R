@@ -234,6 +234,14 @@ mauvais_genre_decompte <- species.dat %>%
     summarize(comptage = n()) %>%
     arrange(desc(comptage)) 
 
+bon_genre <- genus_upper[genus_upper %in% unique(species.dat$genus)]
+bon_genre_decompte <- species.dat %>%
+    filter(genus %in% str_to_lower(bon_genre)) %>%
+    group_by(genus) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage)) 
+
+
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
 
