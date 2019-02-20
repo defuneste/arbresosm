@@ -244,7 +244,15 @@ bon_genre_decompte <- species.dat %>%
 # genre comprenant un espace et ayant donc plusieurs mots
 
 espece_genre <- unique(species.dat$genus)[grep(pattern = "\\s", unique(species.dat$genus))] 
-espece_genre <- espece_genre[!espece_genre %in% unique(species.dat$species)]
+espece_genre_change <- espece_genre[!espece_genre %in% unique(species.dat$species)]
+espece_genre_keep <- espece_genre[espece_genre %in% unique(species.dat$species)]
+
+#on regarde où sont les emplacement libre 
+bbox_emplacement_libre <- species.shp %>%
+    filter(genus == "Emplacement libre")%>%
+    st_bbox()
+
+#map_emplacement_libre <- get_map(bbox = bbox_emplacement_libre,  zoom = 10, source = "stamen")
 
 
 #### on va regarder pour les espèces
