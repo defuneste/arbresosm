@@ -21,6 +21,8 @@ library(stringr) # modif sur character
 library(ggplot2) # la visualisation
 library(tmap) # carto
 library(ggmap)# carto +
+library(leaflet) # carto web
+library(rsconnect) # pour partager une carte
 
 ## analyse spatiale / carto
 library(sp) # classes et methodes pour données spatiales pe déclassé par SF
@@ -252,8 +254,13 @@ bbox_emplacement_libre <- species.shp %>%
     filter(genus == "Emplacement libre")%>%
     st_bbox()
 
-#map_emplacement_libre <- get_map(bbox = bbox_emplacement_libre,  zoom = 10, source = "stamen")
+emplacement_libre <- st_transform(emplacement_libre, 4326)
+st_crs(emplacement_libre)
 
+carto_lyon <- leaflet() %>%
+    addTiles() %>%
+    addCircleMarkers(data = emplacement_libre, radius = 2, 
+                     color = "green")
 
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces

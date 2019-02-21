@@ -8,7 +8,7 @@ output: html_document
 
 ### Chargement des libraries
 
-```{r, chargment des libraries, message = FALSE}
+```{r, "chargment des libraries", message = FALSE}
 library(sp)
 library(sf)
 library(dplyr)
@@ -21,7 +21,7 @@ library(ggplot2)
 
 Les données sont issues de Lyon Open Data
 
-```{r, lecture du fichier shape}
+```{r, "lecture du fichier shape"}
 arbres_lyon.shp <- st_read("abr_arbres_alignement.abrarbre.shp")
 summary(arbres_lyon.shp)
 ```
@@ -32,7 +32,7 @@ Le fichier comprends `r dim(arbres_lyon.shp)[1]` arbres et `r dim(arbres_lyon.sh
 
 #### genre
 
-```{r, genre}
+```{r, "genre"}
 sort(unique(arbres_lyon.shp$genre))
 ```
 
@@ -53,7 +53,7 @@ Cette liste comprend trois valeurs étranges :
 
 Dans le cadre d'OSM je pense qu'il ne faut pas garder ces lignes ("on cartographie le terrain"). 
 
-```{r, correction des "non-genres"}
+```{r, "correction des non-genres"}
 arbres_lyon.shp$filtre <- 0
 arbres_lyon.shp$filtre[arbres_lyon.shp$genre == "Emplacement libre"] <- 1
 arbres_lyon.shp$filtre[arbres_lyon.shp$genre == "souche"] <- 1
@@ -77,7 +77,7 @@ arbres_lyon.shp$genre[is.na(arbres_lyon.shp$genre)] <- "Hibiscus"
 
 #### espèce
 
-```{r, espece}
+```{r, "espece"}
 sort(unique(arbres_lyon.shp$espece))
 ```
 
@@ -93,7 +93,7 @@ Ces trois termes sont tous liés à la façon dont la base a codé les hybrides 
 
 Utiliser "hybride" plutôt que × qui est un caractère particulier n'est pas une mauvaise idée et éviterais des tas de problème d'encodage (on utilise souvent x pour aller plus vite)
 
-```{r, hybride}
+```{r, "hybride"}
 arbres_lyon.shp$espece <- recode(arbres_lyon.shp$espece, hybride = "×" )
 arbres_lyon.shp$variete[arbres_lyon.shp$espece == "hybride turneri"] <- "turneri"
 arbres_lyon.shp$espece[arbres_lyon.shp$espece == "hybride turneri"] <- "×"
@@ -108,7 +108,7 @@ arbres_lyon.shp$species <- ifelse(arbres_lyon.shp$espece == "×" , paste(arbres_
 
 ### Circonférence
 
-```{r, circonférence summary}
+```{r, "circonférence summary"}
 summary(arbres_lyon.shp$circonfere)
 ```
 
@@ -119,14 +119,14 @@ La cironférence minimale de `r min(arbres_lyon.shp$circonfere, na.rm = T)` conc
 OSM utilise cependant la circonférence et par défaut celle-ci doit être en mêtre. *cironfere* semble être plutôt en cm, la mediane serait  donc de 0,49 m et non pas 49 m soit `r 0.49/pi` m de DHP. Si elle est bien en cm il est peut probable que l'on ai des arbres de plus de 628 cm de circonfèrence (des arbres de 2 m de DHP sont très rares). 
 
 
-```{r, cironférence données superieures à 628}
+```{r, "cironférence données superieures à 628"}
 table(arbres_lyon.shp$circonfere[arbres_lyon.shp$circonfere >= 628])
 ```
 
 
 Le plus évident est l'arbre de 12210 cm de circonférence (prés de 39 m de rayon) qui doit correspondre à une erreur de frappe (trop de deux ?). Vient ensuite les `"999"` qui sont souvent utilisés pour indiquer des valeurs manquantes. le fait qu'ils aient tous été plantés après 2005 renforce cette idée. Les 29 arbres ayant une 800 de `circonfere ` ont tous été plantés le même jour (2018-06-25) et sont sur la même avenue (avenue Bataillon Carmognole Liberté, Vaulx-en-Velin). On peut éliminer l'hypothèse de gros arbres. Si ils ont tous le même diamètre et qu'ils ont bien été tous plantés la même date il est possible que de jeunes arbres aient 0,08 m (8cm de circonfèrence). Dans un premier temps il me semble cependant plus sage de leur attribuer une valeur manquante.   Pour les dernières valeures (1069, 997 et 1114) il est probable que l'on soit aussi dans une erreur d'encodage et donc en attendant ils prendront également NA. 
 
-```{r, circonférence valeurs manquantes et passage en m}
+```{r, "circonférence valeurs manquantes et passage en m"}
 # passage en m et en "circumference"
 arbres_lyon.shp$circumference <- arbres_lyon.shp$circonfere/100 # passage en m
 # on passe en NA les arbres trop gros, seul 800 pourrait être corrigé en 0,08
@@ -143,7 +143,7 @@ On obtient encore pas mal de valeurs fortes mais la distribution fait un peu plu
 
 Je pense que c'est un des critéres les plus difficiles à estimer et qui héberge souvent une proportion un peu plus forte de valeurs "rondes" (ici par exemple 30). Il est très peu probable d'avoir des arbres de plus de 50 m (j'ai aussi des doutes pour ceux de plus de 40 m).
 
-```{r, hauteur >= 50}
+```{r, "hauteur >= 50"}
 table(arbres_lyon.shp$hauteurtot[arbres_lyon.shp$hauteurtot >= 50])
 ```
 
@@ -151,12 +151,12 @@ table(arbres_lyon.shp$hauteurtot[arbres_lyon.shp$hauteurtot >= 50])
 
 Ensuite, il y a 5047 arbres avec une hauteur nulle (`0`). Il est probable que ce 0 corresponde à des valeurs manquantes.
 
-```{r, hauteur NA}
+```{r, "hauteur NA"}
 arbres_lyon.shp$hauteurtot[arbres_lyon.shp$hauteurtot >= 50] <- NA
 arbres_lyon.shp$hauteurtot[arbres_lyon.shp$hauteurtot == 0] <- NA
 ```
 
-```{r, histo de verif}
+```{r, "histo de verif"}
 ggplot(data = arbres_lyon.shp, aes(hauteurtot)) +
   geom_histogram(binwidth = 1)
 ```
@@ -165,7 +165,7 @@ ggplot(data = arbres_lyon.shp, aes(hauteurtot)) +
 
 Il y a 5070 valeurs nulles pour le diamêtre de la courone du houppier.  Il me semble préferable d'attribuer NA. Dans les valeurs extrèmes seulement 25 et 29 sortent du lot et devraient être passer comme NA. 
 
-```{r, rayoncouro}
+```{r, "rayoncouro"}
 arbres_lyon.shp$rayoncouro[arbres_lyon.shp$rayoncouro == 0]  <- NA
 arbres_lyon.shp$rayoncouro[arbres_lyon.shp$rayoncouro >= 25] <- NA
 ggplot(data = arbres_lyon.shp, aes(rayoncouro)) +
@@ -175,7 +175,7 @@ ggplot(data = arbres_lyon.shp, aes(rayoncouro)) +
 
 ### dateplanta et anneeplant
 
-```{r, dateplanta et anneeplant}
+```{r, "dateplanta et anneeplant"}
 summary(arbres_lyon.shp$dateplanta)
 summary(arbres_lyon.shp$anneeplant)
 ```
@@ -184,7 +184,7 @@ Ce ne sont pas des critères présent dans le wiki. On les retrouve cependant re
 
 Une rapide vérification indique des arbres plantés en 1616 et 1664 avec de petites diamètres. Les deux arbres plantés en 1861 et celui en 1894 ont d'assez gros diamètres sont plus credibles. Beaucoup d'arbres plantés en 1900 sont douteux mais il serait necessaire d'en savoir plus avant de leur attribuer NA. A l'opposé l'arbre planté en 2025 et celui en 2019 semble être des fautes de frappes et vont devoir également prendre NA pour valeur. 
 
-```{r, dateplanta}
+```{r, "dateplanta"}
 arbres_lyon.shp$rayoncouro[arbres_lyon.shp$dateplanta <= 1850] <- NA
 arbres_lyon.shp$rayoncouro[arbres_lyon.shp$dateplanta >= 2019] <- NA
 ```
@@ -192,7 +192,7 @@ arbres_lyon.shp$rayoncouro[arbres_lyon.shp$dateplanta >= 2019] <- NA
 
 ### mise en forme pour OSM
 
-```{r, renomer}
+```{r, "renomer"}
 arbres_lyon_final.shp <- arbres_lyon.shp %>%
   rename(genus = genre, 
          "species:fr" = essencefra, 
@@ -210,7 +210,7 @@ summary(arbres_lyon_final.shp)
 ```
 
 
-```{r, corrections de thuya, pirus et eudio}
+```{r, "corrections de thuya, pirus et eudio"}
 ## attention facteurs
 levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Thuya"] <- "Thuja"
 levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Pirus"] <- "Pyrus"
@@ -221,7 +221,7 @@ levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Evod
 
 #### rajout de Leaf_type et Leaf_cycle
 
-```{r, import du csv d'après le wiki}
+```{r}
 leaf <- read.csv2("leaft_type.csv", sep = "\t", stringsAsFactors = FALSE)
 leaf[leaf$leaf_cycle == "evergreen and deciduous",] <- "deciduous and evergreen"
 head(leaf)
@@ -231,12 +231,12 @@ Le fichier CSV provient du [wiki](https://wiki.openstreetmap.org/wiki/FR:Tag:nat
 
 Il pose un probleme interessant : des genres peuvent avoir des espèces décidues (deciduous) et sempervirentes (evergreen) : dans les chênes il y a les chênes pubescents et les chênes verts. 
 
-```{r, verfication des genres presents}
+```{r, "verfication des genres presents"}
 sort(unique(arbres_lyon_final.shp$genus)[unique(arbres_lyon_final.shp$genus) %in% leaf$Genus]) # liste des genres presents
 sort(unique(arbres_lyon_final.shp$genus)[!(unique(arbres_lyon_final.shp$genus) %in% leaf$Genus)]) # liste des genres absents
 ```
 
-```{r, ajout des genres manquants}
+```{r, "ajout des genres manquants"}
 leaf2 <- read.csv2("leaf_type_ajout.csv", sep = "\t", stringsAsFactors = FALSE) # ouverture du fichier complementaire
 summary(leaf2)
 
@@ -244,7 +244,7 @@ leaf_tot <- rbind(leaf,leaf2) # rajout au fichier tiré du CSV
 summary(leaf_tot)
 ```
 
-```{r, join sur genus}
+```{r, "join sur genus"}
 arbres_lyon_final.shp <- arbres_lyon_final.shp %>% # une jointure
                 left_join(leaf_tot, by = c("genus" = "Genus"))
 summary(arbres_lyon_final.shp)
@@ -253,7 +253,7 @@ summary(arbres_lyon_final.shp)
 
 ### export
 
-```{r, message=FALSE, sous fichiers pour facilier l'export}
+```{r, message=FALSE, "sous fichiers pour facilier l'export"}
 outlist <- list() # initialisation d'un liste
 longueur <- length(unique(arbres_lyon_final.shp$codeinsee)) # le nombre de fichier souhaité
 
