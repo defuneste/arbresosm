@@ -235,6 +235,8 @@ accent_decompte <- species.dat %>%
     summarize(comptage = n()) %>%
     arrange(desc(comptage)) 
 
+sum(accent_decompte$comptage)
+
 # on capitalise la premiere lettre et on ne garde pas ceux absent dans les nom capitalisé
 genus_upper <- str_to_title(unique(species.dat$genus)[grep(pattern = "^[[:lower:]]", unique(species.dat$genus))])
 
@@ -259,8 +261,29 @@ sum(bon_genre_decompte$comptage)
 # genre comprenant un espace et ayant donc plusieurs mots
 
 espece_genre <- unique(species.dat$genus)[grep(pattern = "\\s", unique(species.dat$genus))] 
+espece_genre_decompte <- species.dat %>%
+    filter(genus %in% espece_genre) %>%
+    group_by(genus) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage)) 
+
+sum(espece_genre_decompte$comptage)
+
 espece_genre_change <- espece_genre[!espece_genre %in% unique(species.dat$species)]
+espece_genre_decompte <- species.dat %>%
+    filter(genus %in% espece_genre_change ) %>%
+    group_by(genus) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage)) 
+
+sum(espece_genre_decompte$comptage)
+
 espece_genre_keep <- espece_genre[espece_genre %in% unique(species.dat$species)]
+espece_genre_decompte <- species.dat %>%
+    filter(genus %in% espece_genre_keep ) %>%
+    group_by(genus) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage)) 
 
 #on regarde où sont les emplacement libre 
 emplacement_libre <- species.shp %>%
@@ -276,6 +299,17 @@ carto_lyon <- leaflet() %>%
     addTiles() %>%
     addCircleMarkers(data = emplacement_libre, radius = 2, 
                      color = "green")
+
+# les ;
+
+virgule <- unique(species.dat$genus)[grep(pattern = "\\;", unique(species.dat$genus))] # genres contenant un ;
+espece_genre_decompte <- species.dat %>%
+    filter(genus %in% virgule  ) %>%
+    group_by(genus) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage)) 
+
+
 
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
