@@ -225,6 +225,15 @@ sum(table(species.dat$genus)) # 80170 renseignements dans "genus"
 unique(species.dat$genus)[grep(pattern = "^[[:lower:]]", unique(species.dat$genus))] # genres commencant par une minuscule
 unique(species.dat$genus)[grep(pattern = "\\s", unique(species.dat$genus))] # genres contenant un espace
 unique(species.dat$genus)[grep(pattern = "\\;", unique(species.dat$genus))] # genres contenant un ;
+unique(species.dat$genus)[grep(pattern = "(\\è|é|ê)", unique(species.dat$genus))]  # genres contenant un è, é, ê
+
+# on regarde les accents 
+accent <- unique(species.dat$genus)[grep(pattern = "(\\è|é|ê)", unique(species.dat$genus))]  
+accent_decompte <- species.dat %>%
+    filter(genus %in% accent) %>%
+    group_by(genus) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage)) 
 
 # on capitalise la premiere lettre et on ne garde pas ceux absent dans les nom capitalisé
 genus_upper <- str_to_title(unique(species.dat$genus)[grep(pattern = "^[[:lower:]]", unique(species.dat$genus))])
@@ -236,12 +245,16 @@ mauvais_genre_decompte <- species.dat %>%
     summarize(comptage = n()) %>%
     arrange(desc(comptage)) 
 
+sum(mauvais_genre_decompte$comptage)
+
 bon_genre <- genus_upper[genus_upper %in% unique(species.dat$genus)]
 bon_genre_decompte <- species.dat %>%
     filter(genus %in% str_to_lower(bon_genre)) %>%
     group_by(genus) %>%
     summarize(comptage = n()) %>%
     arrange(desc(comptage)) 
+
+sum(bon_genre_decompte$comptage)
 
 # genre comprenant un espace et ayant donc plusieurs mots
 
@@ -250,12 +263,14 @@ espece_genre_change <- espece_genre[!espece_genre %in% unique(species.dat$specie
 espece_genre_keep <- espece_genre[espece_genre %in% unique(species.dat$species)]
 
 #on regarde où sont les emplacement libre 
-bbox_emplacement_libre <- species.shp %>%
-    filter(genus == "Emplacement libre")%>%
-    st_bbox()
+emplacement_libre <- species.shp %>%
+    filter(genus == "Emplacement libre")
 
 emplacement_libre <- st_transform(emplacement_libre, 4326)
 st_crs(emplacement_libre)
+
+st_write(emplacement_libre, dsn = "emplacement_libre.gpx", layer = "waypoints", driver = "GPX", 
+         dataset_options = "GPX_USE_EXTENSIONS=yes")
 
 carto_lyon <- leaflet() %>%
     addTiles() %>%
