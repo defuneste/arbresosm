@@ -227,36 +227,50 @@ unique(species.dat$genus)[grep(pattern = "\\s", unique(species.dat$genus))] # ge
 unique(species.dat$genus)[grep(pattern = "\\;", unique(species.dat$genus))] # genres contenant un ;
 unique(species.dat$genus)[grep(pattern = "(\\è|é|ê)", unique(species.dat$genus))]  # genres contenant un è, é, ê
 
-# on regarde les accents 
-accent <- unique(species.dat$genus)[grep(pattern = "(\\è|é|ê)", unique(species.dat$genus))]  
-accent_decompte <- species.dat %>%
-    filter(genus %in% accent) %>%
-    group_by(genus) %>%
-    summarize(comptage = n()) %>%
-    arrange(desc(comptage)) 
+# la fonction prend une regex et une collone de verification par défaut "genus"
 
-sum(accent_decompte$comptage)
+tableau_selection <- function(patron_regex, colonne="genus") {
+    filtre <- unique(species.dat$genus)[grep(pattern = patron_regex, unique(species.dat[[colonne]]))]  
+    decompte <- species.dat %>%
+        filter(genus %in% filtre) %>%
+        group_by(genus) %>%
+        summarize(comptage = n()) %>%
+        arrange(desc(comptage))
+    # impression du tibble
+    print(decompte)
+    # impression du nombre de ligne concernées
+    sum(decompte$comptage)
+}
+
+# on regarde les accents 
+
+tableau_selection("(\\è|é|ê)")
 
 # on capitalise la premiere lettre et on ne garde pas ceux absent dans les nom capitalisé
-genus_upper <- str_to_title(unique(species.dat$genus)[grep(pattern = "^[[:lower:]]", unique(species.dat$genus))])
 
-mauvais_genre <- genus_upper[!genus_upper %in% unique(species.dat$genus)]
-mauvais_genre_decompte <- species.dat %>%
-    filter(genus %in% str_to_lower(mauvais_genre)) %>%
+tableau_selection_capital <- function(patron_regex, colonne="genus", negation = FALSE) {
+
+genus_upper <- str_to_title(unique(species.dat$genus)[grep(pattern = patron_regex, unique(species.dat[[colonne]]))])
+
+if(negation == TRUE){
+    genre <- genus_upper[genus_upper %in% unique(species.dat$genus)]
+    decompte <- species.dat %>%
+    filter(genus %in% str_to_lower(genre)) %>%
     group_by(genus) %>%
     summarize(comptage = n()) %>%
-    arrange(desc(comptage)) 
+    arrange(desc(comptage)) }
+else {
+    genre <- genus_upper[!genus_upper %in% unique(species.dat$genus)]
+    decompte <- species.dat %>%
+        filter(genus %in% str_to_lower(genre)) %>%
+        group_by(genus) %>%
+        summarize(comptage = n()) %>%
+        arrange(desc(comptage)) }
+print(decompte)
+sum(decompte$comptage)
+}
 
-sum(mauvais_genre_decompte$comptage)
-
-bon_genre <- genus_upper[genus_upper %in% unique(species.dat$genus)]
-bon_genre_decompte <- species.dat %>%
-    filter(genus %in% str_to_lower(bon_genre)) %>%
-    group_by(genus) %>%
-    summarize(comptage = n()) %>%
-    arrange(desc(comptage)) 
-
-sum(bon_genre_decompte$comptage)
+tableau_selection_capital("^[[:lower:]]", negation = T)
 
 # genre comprenant un espace et ayant donc plusieurs mots
 
@@ -267,7 +281,7 @@ espece_genre_decompte <- species.dat %>%
     summarize(comptage = n()) %>%
     arrange(desc(comptage)) 
 
-sum(espece_genre_decompte$comptage)
+tableau_selection("\\s")
 
 espece_genre_change <- espece_genre[!espece_genre %in% unique(species.dat$species)]
 espece_genre_decompte <- species.dat %>%
@@ -304,12 +318,7 @@ carto_lyon <- leaflet() %>%
 
 virgule <- unique(species.dat$genus)[grep(pattern = "\\;", unique(species.dat$genus))] # genres contenant un ;
 espece_genre_decompte <- species.dat %>%
-    filter(genus %in% virgule  ) %>%
-    group_by(genus) %>%
-    summarize(comptage = n()) %>%
-    arrange(desc(comptage)) 
-
-
+    filter(genus %in% virgule )
 
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
