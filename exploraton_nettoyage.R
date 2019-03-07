@@ -242,15 +242,16 @@ tableau_selection <- function(patron_regex, colonne="genus") {
     sum(decompte$comptage)
 }
 
+
 # on regarde les accents 
 
 tableau_selection("(\\è|é|ê)")
 
 # on capitalise la premiere lettre et on ne garde pas ceux absent dans les nom capitalisé
 
-tableau_selection_capital <- function(patron_regex, colonne="genus", negation = FALSE) {
+tableau_selection_capital <- function(patron_regex, negation = FALSE) {
 
-genus_upper <- str_to_title(unique(species.dat$genus)[grep(pattern = patron_regex, unique(species.dat[[colonne]]))])
+genus_upper <- str_to_title(unique(species.dat$genus)[grep(pattern = patron_regex, unique(species.dat$genus))])
 
 if(negation == TRUE){
     genre <- genus_upper[genus_upper %in% unique(species.dat$genus)]
@@ -271,33 +272,34 @@ sum(decompte$comptage)
 }
 
 tableau_selection_capital("^[[:lower:]]", negation = T)
+tableau_selection_capital("^[[:lower:]]", negation = F)
 
 # genre comprenant un espace et ayant donc plusieurs mots
 
-espece_genre <- unique(species.dat$genus)[grep(pattern = "\\s", unique(species.dat$genus))] 
-espece_genre_decompte <- species.dat %>%
-    filter(genus %in% espece_genre) %>%
-    group_by(genus) %>%
-    summarize(comptage = n()) %>%
-    arrange(desc(comptage)) 
+tableau_selection_essence <- function(patron_regex, negation = FALSE) {
+    
+    genre <- unique(species.dat$genus)[grep(pattern = patron_regex, unique(species.dat$genus))]
+    
+    if(negation == TRUE){
+        genre <- genre[genre %in% unique(species.dat$species)]
+        decompte <- species.dat %>%
+            filter(genus %in% genre) %>%
+            group_by(genus) %>%
+            summarize(comptage = n()) %>%
+            arrange(desc(comptage)) }
+    else {
+        genre <- genre[!genre %in% unique(species.dat$species)]
+        decompte <- species.dat %>%
+            filter(genus %in% genre) %>%
+            group_by(genus) %>%
+            summarize(comptage = n()) %>%
+            arrange(desc(comptage)) }
+    print(decompte)
+    sum(decompte$comptage)
+}
 
-tableau_selection("\\s")
-
-espece_genre_change <- espece_genre[!espece_genre %in% unique(species.dat$species)]
-espece_genre_decompte <- species.dat %>%
-    filter(genus %in% espece_genre_change ) %>%
-    group_by(genus) %>%
-    summarize(comptage = n()) %>%
-    arrange(desc(comptage)) 
-
-sum(espece_genre_decompte$comptage)
-
-espece_genre_keep <- espece_genre[espece_genre %in% unique(species.dat$species)]
-espece_genre_decompte <- species.dat %>%
-    filter(genus %in% espece_genre_keep ) %>%
-    group_by(genus) %>%
-    summarize(comptage = n()) %>%
-    arrange(desc(comptage)) 
+tableau_selection_essence("\\s", negation = T)
+tableau_selection_essence("\\s", negation = F)
 
 #on regarde où sont les emplacement libre 
 emplacement_libre <- species.shp %>%
