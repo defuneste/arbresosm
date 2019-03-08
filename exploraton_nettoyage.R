@@ -239,7 +239,7 @@ tableau_selection <- function(patron_regex, colonne="genus") {
     # impression du tibble
     print(decompte, n = Inf)
     # impression du nombre de ligne concernées
-    sum(decompte$comptage)
+    # sum(decompte$comptage)
 }
 
 
@@ -322,7 +322,10 @@ tableau_selection("\\;")
 
 # si on selectionne toutes les erreurs 
 
-tableau_selection("\\;|è|é|ê|^[[:lower:]]|\\s")
+erreurs <- tableau_selection("\\;|è|é|ê|^[[:lower:]]|\\s")
+
+unique(species.dat$genus)[!unique(species.dat$genus) %in% erreurs$genus]
+
 
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
