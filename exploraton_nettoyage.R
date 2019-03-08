@@ -237,7 +237,7 @@ tableau_selection <- function(patron_regex, colonne="genus") {
         summarize(comptage = n()) %>%
         arrange(desc(comptage))
     # impression du tibble
-    print(decompte)
+    print(decompte, n = Inf)
     # impression du nombre de ligne concernées
     sum(decompte$comptage)
 }
@@ -318,9 +318,11 @@ carto_lyon <- leaflet() %>%
 
 # les ;
 
-virgule <- unique(species.dat$genus)[grep(pattern = "\\;", unique(species.dat$genus))] # genres contenant un ;
-espece_genre_decompte <- species.dat %>%
-    filter(genus %in% virgule )
+tableau_selection("\\;")
+
+# si on selectionne toutes les erreurs 
+
+tableau_selection("\\;|è|é|ê|^[[:lower:]]|\\s")
 
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
