@@ -320,12 +320,25 @@ carto_lyon <- leaflet() %>%
 
 tableau_selection("\\;")
 
-# si on selectionne toutes les erreurs 
+# si on selectionne toutes les erreurs et on regarde les non marqués comme erreus dans les liste de genre d'osm
+
+#travail maison 
+# species.dat<- read.csv("species.dat")
+# summary(species.dat)
+
 
 erreurs <- tableau_selection("\\;|è|é|ê|^[[:lower:]]|\\s")
 
-unique(species.dat$genus)[!unique(species.dat$genus) %in% erreurs$genus]
+genre_corecte <- as.character(sort(unique(species.dat$genus)[!unique(species.dat$genus) %in% erreurs$genus]))
 
+liste_genre <- read.csv("leaft_type.csv", sep = "\t", stringsAsFactors = F)
+summary(liste_genre)
+liste_genre2 <- read.csv("leaf_type_ajout.csv", sep = "\t", stringsAsFactors = F)
+summary(liste_genre2)
+
+genre_osm <- sort(c(liste_genre$Genus, liste_genre2$Genus))
+
+genre_corecte[!genre_corecte %in% genre_osm]
 
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
