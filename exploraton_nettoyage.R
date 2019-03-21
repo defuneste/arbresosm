@@ -336,6 +336,11 @@ summary(liste_genre)
 liste_genre2 <- read.csv("leaf_type_ajout.csv", sep = "\t", stringsAsFactors = F)
 summary(liste_genre2)
 
+## on va comparer à la list produite en verifiant les noms de genre 
+
+liste_genre_metro <- read.csv("liste_genre_metro.csv", sep = "\t")
+summary(liste_genre_metro )
+
 genre_osm <- sort(c(liste_genre$Genus, liste_genre2$Genus))
 
 genre_corecte[!genre_corecte %in% genre_osm]
