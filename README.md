@@ -1,12 +1,12 @@
-# arbresosm
-Les arbres isolés dans OSM France métropolitaine /isolated tree in OSM 
+Les arbres isolés dans OSM France métropolitaine / Isolated Trees in Open Street Map
 
+This project is part of the ReVeRIES research project : http://reveries-project.fr/
 
-This project is part of the ReVeRIES project : http://reveries-project.fr/
+Here, You can find :
 
-You can found here : 
-- script that allow you to import OSM in a postrgesql DB on a local computeur (shell, osm2pgsql), if include in cron it will recreate the DB
-- scripts for analysis the data in OSM about isolated tree (R, tidyverse and usual spatial package)
-- scripts to prepare and reference import tree from city tree database to OSM via JOSM 
+    scripts that allow you to import OSM in a postrgesql database on a local computer (shell, osm2pgsql)
+    * if include in cron it will recreate the DB
+    scripts for data analysis in OSM of isolated trees (R, tidyverse and usual spatial package)
+    scripts to prepare and reference imported trees from municipal tree databases to OSM via JOSM
 
-As part of OSM this is discused in my OSM wiki here : https://wiki.openstreetmap.org/wiki/User:Defuneste 
+As part of OSM, this project is described in my OSM wiki here : https://wiki.openstreetmap.org/wiki/User:Defuneste
