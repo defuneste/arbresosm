@@ -35,7 +35,7 @@ library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
 # il faut établir une connexion 
 
 pw <- {
-  "osm117" # oui c'est pas top de l'ecrire
+  chargelepwd # oui c'est pas top de l'ecrire
 }
 
 # charge les drivers pour postgre 
@@ -46,7 +46,7 @@ drv <- dbDriver("PostgreSQL")
 # ici j'ai pris une db en local pour tester
 # con sera utilisé pour chaque connection et pkoi le franciser
 con <- dbConnect(drv, dbname = "osmgouv",
-                 host = "localhost", port = 5432, # attention 5432 par défaut
+                 host = "localhost", port = port, # attention 5432 par défaut
                  user = "postgres", password = pw) # idem pour user
 rm(pw) # mouais
 
@@ -336,14 +336,23 @@ summary(liste_genre)
 liste_genre2 <- read.csv("leaf_type_ajout.csv", sep = "\t", stringsAsFactors = F)
 summary(liste_genre2)
 
+
+genre_osm <- sort(c(liste_genre$Genus, liste_genre2$Genus))
+
+genre_corecte[!genre_corecte %in% genre_osm]
+
 ## on va comparer à la list produite en verifiant les noms de genre 
 
 liste_genre_metro <- read.csv("liste_genre_metro.csv", sep = "\t")
 summary(liste_genre_metro )
 
-genre_osm <- sort(c(liste_genre$Genus, liste_genre2$Genus))
+species.dat %>%
+    filter(!liste_genre_metro$genus.. %in% genus) %>%
+    group_by(genus) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage))
 
-genre_corecte[!genre_corecte %in% genre_osm]
+
 
 #### on va regarder pour les espèces
 # il y a plusieurs attributs pouvant contenir l'info au niveau des espèces
