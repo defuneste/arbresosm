@@ -35,7 +35,7 @@ library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
 # il faut établir une connexion 
 
 pw <- {
-  chargelepwd # oui c'est pas top de l'ecrire
+  chargelepwd # à charger avant
 }
 
 # charge les drivers pour postgre 
