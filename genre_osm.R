@@ -154,6 +154,11 @@ tableau_selection_essence <- function(patron_regex, negation = FALSE) {
 tableau_selection_essence("\\s", negation = T)
 tableau_selection_essence("\\s", negation = F)
 
+
+# les ;
+
+tableau_selection("\\;")
+
 # on regarde où sont les emplacement libre =========
 emplacement_libre <- species.shp %>%
     filter(genus == "Emplacement libre")
@@ -169,11 +174,8 @@ carto_lyon <- leaflet() %>%
     addCircleMarkers(data = emplacement_libre, radius = 2, 
                      color = "green")
 
-# les ;
 
-tableau_selection("\\;")
-
-# si on selectionne toutes les erreurs et on regarde les non marqués comme erreus dans les liste de genre d'osm
+# si on selectionne toutes les erreurs et on regarde les non marqués comme erreurs dans les liste de genre d'osm
 
 #travail maison 
 # species.dat<- read.csv("species.dat")
@@ -196,14 +198,23 @@ genre_corecte[!genre_corecte %in% genre_osm]
 
 ## on va comparer à la list produite en verifiant les noms de genre 
 
-liste_genre_metro <- read.csv("liste_genre_metro.csv", sep = "\t")
-summary(liste_genre_metro )
+liste_genre_metro <- read.csv("data/liste_genre_metro.csv", sep = "\t", stringsAsFactors = FALSE, strip.white=TRUE)
+summary(liste_genre_metro$genus..)
 
 species.dat %>%
-    filter(!liste_genre_metro$genus.. %in% genus) %>%
+    filter(genus %in% liste_genre_metro$genus..) %>%
     group_by(genus) %>%
     summarize(comptage = n()) %>%
-    arrange(desc(comptage))
+    arrange(desc(comptage)) %>%
+    filter(!is.na(genus)) %>% # on enleve les valeurs manquantes
+    filter(comptage >=100) %>% 
+    ggplot(aes(y= comptage, x = reorder(genus, comptage))) +
+    geom_bar(stat = "identity") + 
+    xlab("Genre") +
+    ylab("Nombre d'arbres") +
+    coord_flip() 
+    
 
-
-
+summary(species.dat)
+class(unique(species.dat$genus))
+class(liste_genre_metro$genus..)
