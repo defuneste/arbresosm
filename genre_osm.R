@@ -210,17 +210,36 @@ species.dat %>%
     filter(comptage >=100) %>% 
     ggplot(aes(y= comptage, x = reorder(genus, comptage))) +
     geom_bar(stat = "identity") + 
-<<<<<<< HEAD
     labs(x="Genre",
          ylab="Nombre d'arbres",
          caption ="source : © les contributeurs d’OpenStreetMap") +
     coord_flip() 
     
-=======
-    coord_flip() +
-    
 
-summary(species.dat)
-class(unique(species.dat$genus))
-class(liste_genre_metro$genus..)
->>>>>>> 3ad03b05607e1d6539306ae43f465e9cffbed32e
+# stats descriptives ================
+
+resum_genre <- species.dat %>%
+    filter(!is.na(genus)) %>%
+    group_by(genus) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage)) 
+    
+# nombre de Na : 799396
+
+sum(resum_genre$comptage)
+
+81230/880626*100 
+
+# genus et autres variables, principalement especes
+
+# nombre de genre qui comportent egalement espèce
+species.dat %>%
+    filter(genus %in% liste_genre_metro$genus..) %>%
+    filter(!is.na(species)) %>%
+    group_by(genus) %>%
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage)) %>% 
+    tally(comptage)
+
+
+

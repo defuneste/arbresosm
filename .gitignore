@@ -1,5 +1,6 @@
 packrat/lib*/
 data/
+graphs/
 .Rproj.user
 .Rhistory
 .RData
