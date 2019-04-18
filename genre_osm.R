@@ -210,8 +210,17 @@ species.dat %>%
     filter(comptage >=100) %>% 
     ggplot(aes(y= comptage, x = reorder(genus, comptage))) +
     geom_bar(stat = "identity") + 
+<<<<<<< HEAD
     labs(x="Genre",
          ylab="Nombre d'arbres",
          caption ="source : © les contributeurs d’OpenStreetMap") +
     coord_flip() 
     
+=======
+    coord_flip() +
+    
+
+summary(species.dat)
+class(unique(species.dat$genus))
+class(liste_genre_metro$genus..)
+>>>>>>> 3ad03b05607e1d6539306ae43f465e9cffbed32e
