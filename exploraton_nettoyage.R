@@ -220,7 +220,6 @@ length(unique(species.shp$species)) ## il y a 1814 valeures différentes à "spe
 
 species.dat <- st_set_geometry(species.shp, value = NULL)
 class(species.dat) # un df
-# write.csv(species.dat, "species.dat") je le sauve pour taffer à la maison 
 
 unique(species.dat$species)
 
