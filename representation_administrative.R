@@ -36,4 +36,12 @@ library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
 #### lecture des communes en france source geofla 
 
 commune.shp <- st_read("data/GEOFLA_COMMUNE_2016/COMMUNE_WGS84.shp")
-plot(commune.shp)
+summary(commune.shp)
+type_commune.dat <- read.csv("data/type_commune.csv", sep = "\t")
+summary(type_commune.dat)
+
+#commune_type.shp <- commune.shp %>% 
+    
+
+class(commune.shp)
+summary(commune.shp)
