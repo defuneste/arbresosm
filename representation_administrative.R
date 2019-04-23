@@ -61,10 +61,14 @@ WHERE boundary = 'administrative'  AND admin_level = '8';")
 summary(commune_osm.shp) # petits verifs
 st_crs(commune_osm.shp)
 
+
+
 # on prends les arbres
 species.shp <- st_read(con,  query = "SELECT way, tags -> 'species' AS species, tags -> 'genus' AS genus
 FROM planet_osm_point
 WHERE planet_osm_point.natural = 'tree';")
+
+
 
 # on utilise mapshaper il faut js mapshaper d'installer surtout ici avec sys= T 
 commune_simplify.shp <- ms_simplify(commune_osm.shp, sys = TRUE) 
@@ -97,7 +101,7 @@ type_commune.dat %>% # il y a pas de NA dans type commune
 table(commune_type.shp$STATUT_2016)
 
 # ici un export en json attemtion si on veut du shape c'est du ISO qui aime pas les accents
-# st_write(commune_type.shp, "commune_type.geojson") 
+#st_write(commune_type.shp, "commune_type.geojson") 
 
 # cartographie de vérification
 
@@ -111,4 +115,29 @@ france_commune_map +
 
 
 ### stats par type de commune ==============
+
+# un polygone pour la france provenant des données admnistrative
+france.shp <- commune_type.shp %>%
+        st_union() 
+st_crs(france.shp)
+
+# on ne garde que les arbres dans ces limites
+
+str(species.shp) # on regarde combien on a d'arbres
+
+species_france.shp <- species.shp[france.shp,] # on coupe pour la france
+str(species_france.shp) # on perd pas mal d'arbres, geneve ? 
+
+# jointure 
+species_france_type.shp <- st_join(species_france.shp, commune_type.shp["TYPE_COM"])
+
+# nb d'arbres
+table(species_france_type.shp$TYPE_COM)
+
+commune_type.shp$surface_km2 <-  set_units(st_area(st_transform(commune_type.shp, 4326)), value = km2)
+
+commune_type.shp %>%
+    st_set_geometry(value = NULL) %>% 
+    group_by(TYPE_COM) %>%
+    summarise(surface = sum(surface_km2)) 
 
