@@ -61,42 +61,37 @@ WHERE boundary = 'administrative'  AND admin_level = '8';")
 summary(commune_osm.shp) # petits verifs
 st_crs(commune_osm.shp)
 
-bob <- ms_simplify(commune_osm.shp)
-st_write(bob, "bob.shp")
+# on utilise mapshaper il faut js mapshaper d'installer surtout ici avec sys= T 
+commune_simplify.shp <- ms_simplify(commune_osm.shp, sys = TRUE) 
 
-#commune.shp <- st_read("data/GEOFLA_COMMUNE_2016/COMMUNE_WGS84.shp") # je prend pas le geofla
-#summary(commune.shp)
-#str(commune.shp)
+# une fois le simplify ok on libère de la place
+rm(commune_osm.shp)
 
+#commune.shp <- st_read("data/GEOFLA_COMMUNE_2016/COMMUNE_WGS84.shp") # je prend pas le geofla 
+#summary(commune.shp)                                                 # au final OSM est mieux
+#str(commune.shp)                                                     # regarder admin express
+
+#####
 type_commune.dat <- read.csv("data/type_commune.csv", sep = "\t")
 summary(type_commune.dat)
 str(type_commune.dat)
 
-commune_type.shp <- commune_osm.shp %>% 
+commune_type.shp <- commune_simplify.shp %>% 
     filter(!is.na(insee)) %>% 
     left_join(type_commune.dat, by = c("insee" = "CODGEO"))
 
-
-st_write(commune_type.shp, "commune_type.g")
-
-
 # verification des NA
 commune_type.shp %>%
+    st_set_geometry(value = NULL) %>%  # on drop la geometrie pour du gain de tps
     group_by(STATUT_2016) %>% 
     summarise(comptage = n())
 
-
-
-# il y a pas de NA dans type commune 
-type_commune.dat %>%
+type_commune.dat %>% # il y a pas de NA dans type commune 
     filter(is.na(STATUT_2016))
 
-commune_Na <- commune_osm.shp %>%
-    filter(is.na(insee)) %>% 
-    select(name)
-
-commune_Na$name
-
 table(commune_type.shp$STATUT_2016)
-sum(table(commune_type.shp$STATUT_2016))
+
+# st_write(commune_type.shp, "commune_type.geojson")
+
+
 
