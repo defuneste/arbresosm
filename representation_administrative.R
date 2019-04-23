@@ -4,7 +4,7 @@
 # pour me rapeller qu'un objet à des infos geometriques type vecteur je lui accolle un .shp
 # si c'est un raster .grid, si c'est un dataframe souvent un .dat
 
-# chargement des différents packages demandés ===========
+# Chargement des différents packages demandés ===========
 
 ### DB
 library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
@@ -32,7 +32,7 @@ library(units) # gestion des unités pour ha
 library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
 
 
-#### lecture des communes en france source geofla =======
+#### Lecture des communes en france source geofla =======
 
 ####  regarder avec OSM
 # il faut établir une connexion 
@@ -61,6 +61,11 @@ WHERE boundary = 'administrative'  AND admin_level = '8';")
 summary(commune_osm.shp) # petits verifs
 st_crs(commune_osm.shp)
 
+# on prends les arbres
+species.shp <- st_read(con,  query = "SELECT way, tags -> 'species' AS species, tags -> 'genus' AS genus
+FROM planet_osm_point
+WHERE planet_osm_point.natural = 'tree';")
+
 # on utilise mapshaper il faut js mapshaper d'installer surtout ici avec sys= T 
 commune_simplify.shp <- ms_simplify(commune_osm.shp, sys = TRUE) 
 
@@ -71,7 +76,7 @@ rm(commune_osm.shp)
 #summary(commune.shp)                                                 # au final OSM est mieux
 #str(commune.shp)                                                     # regarder admin express
 
-#####
+##### jointure avec type de communes ===================
 type_commune.dat <- read.csv("data/type_commune.csv", sep = "\t")
 summary(type_commune.dat)
 str(type_commune.dat)
@@ -83,7 +88,7 @@ commune_type.shp <- commune_simplify.shp %>%
 # verification des NA
 commune_type.shp %>%
     st_set_geometry(value = NULL) %>%  # on drop la geometrie pour du gain de tps
-    group_by(STATUT_2016) %>% 
+    group_by() %>% 
     summarise(comptage = n())
 
 type_commune.dat %>% # il y a pas de NA dans type commune 
@@ -91,7 +96,19 @@ type_commune.dat %>% # il y a pas de NA dans type commune
 
 table(commune_type.shp$STATUT_2016)
 
-# st_write(commune_type.shp, "commune_type.geojson")
+# ici un export en json attemtion si on veut du shape c'est du ISO qui aime pas les accents
+# st_write(commune_type.shp, "commune_type.geojson") 
+
+# cartographie de vérification
+
+france_commune_map <- tm_shape(commune_type.shp) 
+
+france_commune_map +
+            tm_borders(alpha = 0.2) +
+            tm_fill(col="TYPE_COM", labels = c("Rural", "Urbain"), title = "Types communes") +
+            tm_credits("Source : © les contributeurs d’OpenStreetMap", size = 0.4, position=c("left", "top")) +
+            tm_scale_bar(position = c( "center", "BOTTOM"))
 
 
+### stats par type de commune ==============
 
