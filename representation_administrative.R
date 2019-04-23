@@ -129,7 +129,7 @@ species_france.shp <- species.shp[france.shp,] # on coupe pour la france
 str(species_france.shp) # on perd pas mal d'arbres, geneve ? 
 
 # jointure 
-species_france_type.shp <- st_join(species_france.shp, commune_type.shp["TYPE_COM"])
+species_france_type.shp <- st_join(species_france.shp, commune_type.shp[c("TYPE_COM", "insee")])
 
 # nb d'arbres
 table(species_france_type.shp$TYPE_COM)
@@ -141,3 +141,23 @@ commune_type.shp %>%
     group_by(TYPE_COM) %>%
     summarise(surface = sum(surface_km2)) 
 
+# cartes par commune 
+
+arbre_commune <- species_france_type.shp %>% 
+    st_set_geometry(value = NULL) %>% 
+    group_by(insee) %>% 
+    summarise(nbr_arbre = n())
+
+commune_type.shp <- commune_type.shp %>% 
+    left_join(arbre_commune, by = c("insee" = "insee"))
+
+commune_type.shp$nbr_arbre[is.na(commune_type.shp$nbr_arbre)] <- 0
+commune_type.shp$densite_arbre <- commune_type.shp$nbr_arbre/commune_type.shp$surface_km2
+
+summary(commune_type.shp)
+
+
+france_commune_map <- tm_shape(commune_type.shp) 
+
+france_commune_map +
+    tm_polygons(col = "densite_arbre", n = 10)
