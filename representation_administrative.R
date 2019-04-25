@@ -60,22 +60,22 @@ commune_osm.shp  <- st_read(con,  query = "SELECT name,tags -> 'ref:INSEE' AS IN
 FROM planet_osm_polygon
 WHERE boundary = 'administrative'  AND admin_level = '8';")
 summary(commune_osm.shp) # petits verifs
-st_crs(commune_osm.shp)
+st_crs(commune_osm.shp) # verification du CRS
 
 # on prend les regions dans OSM pour un fond
 france.shp <- st_read(con,  query = "SELECT name, way
 FROM planet_osm_polygon
 WHERE boundary = 'administrative'  AND admin_level = '4';")
 
-france_simplify.shp <- ms_simplify(france.shp, sys = TRUE) # un simplify
+# un simplify, il faut js et la library mapshaper d'installer
+# sys = TRUE l'utilise
+france_simplify.shp <- ms_simplify(france.shp, sys = TRUE) 
 # plot(france_simplify.shp) verif
 
 # on prends les arbres
 species.shp <- st_read(con,  query = "SELECT way, tags -> 'species' AS species, tags -> 'genus' AS genus
 FROM planet_osm_point
 WHERE planet_osm_point.natural = 'tree';")
-
-
 
 # on utilise mapshaper il faut js mapshaper d'installer surtout ici avec sys= T 
 commune_simplify.shp <- ms_simplify(commune_osm.shp, sys = TRUE) 
@@ -93,8 +93,8 @@ summary(type_commune.dat)
 str(type_commune.dat)
 
 commune_type.shp <- commune_simplify.shp %>% 
-    filter(!is.na(insee)) %>% 
-    left_join(type_commune.dat, by = c("insee" = "CODGEO"))
+    filter(!is.na(insee)) %>% # on fait un filtre avec les communes qui n'ont pas de COG des non fr
+    left_join(type_commune.dat, by = c("insee" = "CODGEO")) # la jointure
 
 # verification des NA
 commune_type.shp %>%
@@ -105,19 +105,22 @@ commune_type.shp %>%
 type_commune.dat %>% # il y a pas de NA dans type commune 
     filter(is.na(STATUT_2016))
 
-table(commune_type.shp$STATUT_2016)
+table(commune_type.shp$STATUT_2016) # sur les statuts
 
 # ici un export en json attemtion si on veut du shape c'est du ISO qui aime pas les accents
 #st_write(commune_type.shp, "commune_type.geojson") 
 
-# cartographie de vérification
+# cartographie de vérification ici c'est juste un carte des commune rurale/urbaine
 
-france_commune_map <- tm_shape(commune_type.shp) 
+france_commune_map <- tm_shape(commune_type.shp)  # un objet tmap "shape"
 
-france_commune_map +
-            tm_borders(alpha = 0.2) +
+france_commune_map + #  on ajoute à shape
+            tm_borders(alpha = 0.2) + # des bordures moins transparentes
+            # on remplie les polygones 
             tm_fill(col="TYPE_COM", labels = c("Rural", "Urbain"), title = "Types communes") +
+            # les credits
             tm_credits("Source : © les contributeurs d’OpenStreetMap", size = 0.4, position=c("left", "top")) +
+            # une bar
             tm_scale_bar(position = c( "center", "BOTTOM"))
 
 
@@ -125,8 +128,8 @@ france_commune_map +
 
 # un polygone pour la france provenant des données admnistrative
 france.shp <- commune_type.shp %>%
-        st_union() 
-st_crs(france.shp)
+        st_union() # un gros merge sur l'ensemble
+st_crs(france.shp) # verif du CRS
 
 # on ne garde que les arbres dans ces limites
 
@@ -135,37 +138,52 @@ str(species.shp) # on regarde combien on a d'arbres
 species_france.shp <- species.shp[france.shp,] # on coupe pour la france
 str(species_france.shp) # on perd pas mal d'arbres, geneve ? 
 
-# jointure 
+# jointure des types de communes à la table des arbres
 species_france_type.shp <- st_join(species_france.shp, commune_type.shp[c("TYPE_COM", "insee")])
 
-# nb d'arbres
+# nb d'arbres par type de commune
 table(species_france_type.shp$TYPE_COM)
 
-commune_type.shp$surface_km2 <-  set_units(st_area(st_transform(commune_type.shp, 4326)), value = km2)
+# calcul de la superficie par commune en km2, utilisation d'units 
+commune_type.shp$surface_km2 <-  set_units(
+    # on calcul la surface
+    st_area(
+        # il faut avant passer en EPSG 4326 sinon il confond degre et m
+        st_transform(commune_type.shp, 4326)), 
+    value = km2) # ici on aurait pu mettre ha cf la doc d'units 
 
+# calcul de la surface par type de commune
 commune_type.shp %>%
-    st_set_geometry(value = NULL) %>% 
-    group_by(TYPE_COM) %>%
-    summarise(surface = sum(surface_km2)) 
+    st_set_geometry(value = NULL) %>% #drop de la geometrie
+    group_by(TYPE_COM) %>% 
+    summarise(surface = sum(surface_km2)) # une somme sur les surfaces
 
-# cartes par communes 
 
-arbre_commune <- species_france_type.shp %>% 
-    st_set_geometry(value = NULL) %>% 
-    group_by(insee) %>% 
-    summarise(nbr_arbre = n())
+# cartes par communes ================
 
+# un intermediaire pour avoir l nombre d'arbres present par COG
+arbre_commune <- species_france_type.shp %>% # on part des arbres
+    st_set_geometry(value = NULL) %>%  # on enleve la geometrie
+    group_by(insee) %>%  # on groupe par COG
+    summarise(nbr_arbre = n()) # on compte le nombre par COG
+
+# une jointure sur le shape des commune par le COG
 commune_type.shp <- commune_type.shp %>% 
     left_join(arbre_commune, by = c("insee" = "insee"))
 
-commune_type.shp$nbr_arbre[is.na(commune_type.shp$nbr_arbre)] <- 0
+# calcul de nouveaux paramètres
+# en dessous remplace les NA par 0, je prefere aucune donnée à 0 mais cela se discute
+# commune_type.shp$nbr_arbre[is.na(commune_type.shp$nbr_arbre)] <- 0 
+# calcul de densité 
 commune_type.shp$densite_arbre <- commune_type.shp$nbr_arbre/commune_type.shp$surface_km2
+#drop des units pour le case_when qui suit, sinon il demande que mes autres valeurs
+# 0, 0.2 , 1 soit en units aussi 
 commune_type.shp$densite_arbre <- drop_units(commune_type.shp$densite_arbre)
-summary(commune_type.shp)
+summary(commune_type.shp) # une verif
 
-commune_type.shp <- commune_type.shp %>%
-    mutate(class_densité = case_when(
-               densite_arbre == 0 ~ "0",
+commune_type.shp <- commune_type.shp %>% # creation d'un nouveau fichier
+    mutate(class_densité = case_when( # on reclassifie la densite
+              #densite_arbre == 0 ~ "0", # ici si on utilise 0 plutot que NA
                densite_arbre > 0 & densite_arbre <= 0.2 ~ "1",
                densite_arbre > 0.2 & densite_arbre <= 1 ~ "2",
                densite_arbre > 1 & densite_arbre <= 10 ~ "3",
@@ -176,18 +194,21 @@ commune_type.shp <- commune_type.shp %>%
                densite_arbre > 1500 ~ "8"
            ))
 
-table(commune_type.shp$class_densité)
+table(commune_type.shp$class_densité) # un table pour verifier sur les classes de densités par commune 
 
-france_commune_map <- tm_shape(commune_type.shp) 
+france_commune_map <- tm_shape(commune_type.shp) # on sauve le shape dans un objet tmap
 
-legende <- c("Aucune données", "]0-0,2]", "]0,2-1]", "]1-10]", "]10-100]", "]100-500]", "]500-1000]", "]1000-1500]", "]1500+" )
+# la legende, peut aussi être mis dans le case_when
+legende <- c("]0-0,2]", "]0,2-1]", "]1-10]", "]10-100]", "]100-500]", "]500-1000]", "]1000-1500]", "]1500+" )
 
 france_commune_map +
-    tm_fill(col = "class_densité", palette = "Greens", n = 9, contrast = c(0, 1),
-            title = "Arbres isolés/km²", labels = legende) +
-    tm_shape(france_simplify.shp) +
-    tm_borders(col = "grey") +
-    tm_credits("Source : © les contributeurs d’OpenStreetMap", size = 0.5, position=c("left", "top")) +
-    tm_scale_bar(position = c( "center", "BOTTOM")) +
-    tm_legend(title = "Arbres isolés/km² par commune")
+    tm_fill(col = "class_densité", palette = "Greens", n = 8, contrast = c(0, 1), # remplie les polygones avec greens
+            title = "Arbres isolés/km²", labels = legende,                        # titre de la legende, label prend legend
+            textNA = "Aucune donnée",                                             # le label des NA
+            colorNA = "white") +                                                  # les Na en blanc
+    tm_shape(france_simplify.shp) +                                               # rajout d'un shape pour les regions
+    tm_borders(col = "grey") +                                                    # juste les bordures en gris
+    tm_credits("Source : © les contributeurs d’OpenStreetMap", size = 0.5, position=c("left", "top")) + # sources
+    tm_scale_bar(position = c( "center", "BOTTOM")) +                             # legende ici juste sa position
+    tm_legend(title = "Arbres isolés/km² par commune")                            # titre
 
