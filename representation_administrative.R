@@ -56,14 +56,19 @@ con <- dbConnect(drv, dbname = "franceuser",
 rm(pw) # mouais
 
 # on prend les communes dans OSM c'est plus à jour que geofla
-
 commune_osm.shp  <- st_read(con,  query = "SELECT name,tags -> 'ref:INSEE' AS INSEE, way  
 FROM planet_osm_polygon
 WHERE boundary = 'administrative'  AND admin_level = '8';")
 summary(commune_osm.shp) # petits verifs
 st_crs(commune_osm.shp)
 
+# on prend les regions dans OSM pour un fond
+france.shp <- st_read(con,  query = "SELECT name, way
+FROM planet_osm_polygon
+WHERE boundary = 'administrative'  AND admin_level = '4';")
 
+france_simplify.shp <- ms_simplify(france.shp, sys = TRUE) # un simplify
+# plot(france_simplify.shp) verif
 
 # on prends les arbres
 species.shp <- st_read(con,  query = "SELECT way, tags -> 'species' AS species, tags -> 'genus' AS genus
@@ -161,22 +166,28 @@ summary(commune_type.shp)
 commune_type.shp <- commune_type.shp %>%
     mutate(class_densité = case_when(
                densite_arbre == 0 ~ "0",
-               densite_arbre > 0 & densite_arbre <= 0.2 ~ "2",
-               densite_arbre > 0.2 & densite_arbre <= 1 ~ "3",
-               densite_arbre > 1 & densite_arbre <= 10 ~ "4",
-               densite_arbre > 10 & densite_arbre <= 100 ~ "5",
-               densite_arbre > 100 & densite_arbre <= 500 ~ "6",
-               densite_arbre > 500 & densite_arbre <= 1000 ~ "7",
-               densite_arbre > 1000 & densite_arbre <= 1500 ~ "8",
-               densite_arbre > 1500 ~ "9"
+               densite_arbre > 0 & densite_arbre <= 0.2 ~ "1",
+               densite_arbre > 0.2 & densite_arbre <= 1 ~ "2",
+               densite_arbre > 1 & densite_arbre <= 10 ~ "3",
+               densite_arbre > 10 & densite_arbre <= 100 ~ "4",
+               densite_arbre > 100 & densite_arbre <= 500 ~ "5",
+               densite_arbre > 500 & densite_arbre <= 1000 ~ "6",
+               densite_arbre > 1000 & densite_arbre <= 1500 ~ "7",
+               densite_arbre > 1500 ~ "8"
            ))
-
-france_commune_map <- tm_shape(commune_type.shp) 
 
 table(commune_type.shp$class_densité)
 
+france_commune_map <- tm_shape(commune_type.shp) 
+
+legende <- c("Aucune données", "]0-0,2]", "]0,2-1]", "]1-10]", "]10-100]", "]100-500]", "]500-1000]", "]1000-1500]", "]1500+" )
+
 france_commune_map +
-    tm_fill(col = "class_densité", palette = "Greens", n = 10, contrast = c(0, 1)) +
-    tm_credits("Source : © les contributeurs d’OpenStreetMap", size = 0.4, position=c("left", "top")) +
-    tm_scale_bar(position = c( "center", "BOTTOM"))
+    tm_fill(col = "class_densité", palette = "Greens", n = 9, contrast = c(0, 1),
+            title = "Arbres isolés/km²", labels = legende) +
+    tm_shape(france_simplify.shp) +
+    tm_borders(col = "grey") +
+    tm_credits("Source : © les contributeurs d’OpenStreetMap", size = 0.5, position=c("left", "top")) +
+    tm_scale_bar(position = c( "center", "BOTTOM")) +
+    tm_legend(title = "Arbres isolés/km² par commune")
 
