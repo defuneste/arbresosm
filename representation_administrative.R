@@ -19,9 +19,11 @@ library(stringr) # modif sur character
 ### visualisation
 library(ggplot2) # la visualisation
 library(tmap) # carto
+library(tmaptools) # + outils pour tmap
 library(ggmap)# carto +
 library(leaflet) # carto web
 library(rsconnect) # pour partager une carte
+library(RColorBrewer) # des palettes
 
 ## analyse spatiale / carto
 library(sp) # classes et methodes pour données spatiales pe déclassé par SF
@@ -141,7 +143,7 @@ commune_type.shp %>%
     group_by(TYPE_COM) %>%
     summarise(surface = sum(surface_km2)) 
 
-# cartes par commune 
+# cartes par communes 
 
 arbre_commune <- species_france_type.shp %>% 
     st_set_geometry(value = NULL) %>% 
@@ -153,11 +155,28 @@ commune_type.shp <- commune_type.shp %>%
 
 commune_type.shp$nbr_arbre[is.na(commune_type.shp$nbr_arbre)] <- 0
 commune_type.shp$densite_arbre <- commune_type.shp$nbr_arbre/commune_type.shp$surface_km2
-
+commune_type.shp$densite_arbre <- drop_units(commune_type.shp$densite_arbre)
 summary(commune_type.shp)
 
+commune_type.shp <- commune_type.shp %>%
+    mutate(class_densité = case_when(
+               densite_arbre == 0 ~ "0",
+               densite_arbre > 0 & densite_arbre <= 0.2 ~ "2",
+               densite_arbre > 0.2 & densite_arbre <= 1 ~ "3",
+               densite_arbre > 1 & densite_arbre <= 10 ~ "4",
+               densite_arbre > 10 & densite_arbre <= 100 ~ "5",
+               densite_arbre > 100 & densite_arbre <= 500 ~ "6",
+               densite_arbre > 500 & densite_arbre <= 1000 ~ "7",
+               densite_arbre > 1000 & densite_arbre <= 1500 ~ "8",
+               densite_arbre > 1500 ~ "9"
+           ))
 
 france_commune_map <- tm_shape(commune_type.shp) 
 
+table(commune_type.shp$class_densité)
+
 france_commune_map +
-    tm_polygons(col = "densite_arbre", n = 10)
+    tm_fill(col = "class_densité", palette = "Greens", n = 10, contrast = c(0, 1)) +
+    tm_credits("Source : © les contributeurs d’OpenStreetMap", size = 0.4, position=c("left", "top")) +
+    tm_scale_bar(position = c( "center", "BOTTOM"))
+
