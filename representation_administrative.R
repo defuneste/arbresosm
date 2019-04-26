@@ -140,9 +140,23 @@ str(species_france.shp) # on perd pas mal d'arbres, geneve ?
 
 # jointure des types de communes à la table des arbres
 species_france_type.shp <- st_join(species_france.shp, commune_type.shp[c("TYPE_COM", "insee")])
+# besoin des arbres mais aussi des arbres avec un peu d'info
+# je vais definir le "un peu d'info" comme ayant une indication au niveau du genre ou de l'espece meme fausse
+# il y a peu d'erreurs sur le genre donc c'est moins grave, espèce est plus compliquée
 
-# nb d'arbres par type de commune
+species_france_type.shp$info <- 0 # un nouveau champ
+species_france_type.shp$info[!is.na(species_france_type.shp$genus)] <- 1 # il prend 1 quamd j'ai une info sur genus
+species_france_type.shp$info[!is.na(species_france_type.shp$species)] <- 1 # il prend 1 quamd j'ai une info sur species
+sum(species_france_type.shp$info)
+
+# nb d'arbres par types de commune
 table(species_france_type.shp$TYPE_COM)
+# RURAL URBAIN 
+# 125510 694969 
+# nb d'arbres avec info par types de commune
+table(species_france_type.shp$TYPE_COM[species_france_type.shp$info == 1])
+# RURAL URBAIN 
+# 1620 162671 
 
 # calcul de la superficie par commune en km2, utilisation d'units 
 commune_type.shp$surface_km2 <-  set_units(
@@ -160,14 +174,6 @@ commune_type.shp %>%
 
 
 # cartes par communes de la presence d'arbres ================
-# besoin des arbres mais aussi des arbres avec un peu d'info
-# je vais definir le "un peu d'info" comme ayant une indication au niveau du genre ou de l'espece meme fausse
-# il y a peu d'erreurs sur le genre donc c'est moins grave, espèce est plus compliquée
-
-species_france_type.shp$info <- 0 # un nouveau champ
-species_france_type.shp$info[!is.na(species_france_type.shp$genus)] <- 1 # il prend 1 quamd j'ai une info sur genus
-species_france_type.shp$info[!is.na(species_france_type.shp$species)] <- 1 # il prend 1 quamd j'ai une info sur species
-sum(species_france_type.shp$info)
 
 # un intermediaire pour avoir l nombre d'arbres present par COG
 arbre_commune <- species_france_type.shp %>%                # on part des arbres
