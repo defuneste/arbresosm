@@ -2,7 +2,9 @@
 title: "Arbres d'alignement Lyon"
 author: "Olivier Leroy"
 date: "8 janvier 2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 

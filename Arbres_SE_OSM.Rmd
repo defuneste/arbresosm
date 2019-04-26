@@ -1,0 +1,48 @@
+---
+title: "Imports Arbres SE"
+author: "Olivier Leroy"
+date: "25 avril 2019"
+output: html_document
+---
+
+# Chargement des bibliothèques 
+
+```{r, echo=FALSE}
+### manip
+library(dplyr) # manip de données en tidyverse
+library(tibble)
+library(tidyr)
+library(lubridate) # date
+library(stringr) # modif sur character
+
+### visualisation
+library(ggplot2) # la visualisation
+library(tmap) # carto
+library(tmaptools) # + outils pour tmap
+library(ggmap)# carto +
+library(leaflet) # carto web
+library(rsconnect) # pour partager une carte
+library(RColorBrewer) # des palettes
+
+## analyse spatiale / carto
+library(sp) # classes et methodes pour données spatiales pe déclassé par SF
+library(rgdal) #gdal pour projection, crud et surtout export
+library(rgeos) # geos, penser à installer libgeos++-dev avant, travail avec objet sp
+library(sf) # nouveau package de classes et methodes spatiales doit "remplacer" rgdal et rgeos (et ofc sp) 
+library(units) # gestion des unités pour ha
+library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
+```
+
+# lecture des données 
+
+```{r}
+arbres_se.shp <- st_read("data/arbres_se_brut.geojson")
+summary(arbres_se.shp)
+```
+
+# recodage des données
+
+```{r}
+plot(arbres_se.shp)
+```
+
