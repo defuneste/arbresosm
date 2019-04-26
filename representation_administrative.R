@@ -159,13 +159,22 @@ commune_type.shp %>%
     summarise(surface = sum(surface_km2)) # une somme sur les surfaces
 
 
-# cartes par communes ================
+# cartes par communes de la presence d'arbres ================
+# besoin des arbres mais aussi des arbres avec un peu d'info
+# je vais definir le "un peu d'info" comme ayant une indication au niveau du genre ou de l'espece meme fausse
+# il y a peu d'erreurs sur le genre donc c'est moins grave, espèce est plus compliquée
+
+species_france_type.shp$info <- 0 # un nouveau champ
+species_france_type.shp$info[!is.na(species_france_type.shp$genus)] <- 1 # il prend 1 quamd j'ai une info sur genus
+species_france_type.shp$info[!is.na(species_france_type.shp$species)] <- 1 # il prend 1 quamd j'ai une info sur species
+sum(species_france_type.shp$info)
 
 # un intermediaire pour avoir l nombre d'arbres present par COG
 arbre_commune <- species_france_type.shp %>% # on part des arbres
     st_set_geometry(value = NULL) %>%  # on enleve la geometrie
     group_by(insee) %>%  # on groupe par COG
-    summarise(nbr_arbre = n()) # on compte le nombre par COG
+    summarise(nbr_arbre = n(), # on compte le nombre d'arbre par COG
+              nbr_arbre_info = sum(info)) # com compte le mombre d'arbre avec info par COG
 
 # une jointure sur le shape des commune par le COG
 commune_type.shp <- commune_type.shp %>% 
@@ -176,8 +185,11 @@ commune_type.shp <- commune_type.shp %>%
 # commune_type.shp$nbr_arbre[is.na(commune_type.shp$nbr_arbre)] <- 0 
 # calcul de densité 
 commune_type.shp$densite_arbre <- commune_type.shp$nbr_arbre/commune_type.shp$surface_km2
+commune_type.shp$densite_arbre_info <- commune_type.shp$nbr_arbre_info/commune_type.shp$surface_km2
+
 #drop des units pour le case_when qui suit, sinon il demande que mes autres valeurs
 # 0, 0.2 , 1 soit en units aussi 
+commune_type.shp$densite_arbre_info <- drop_units(commune_type.shp$densite_arbre_info)
 commune_type.shp$densite_arbre <- drop_units(commune_type.shp$densite_arbre)
 summary(commune_type.shp) # une verif
 
@@ -191,10 +203,20 @@ commune_type.shp <- commune_type.shp %>% # creation d'un nouveau fichier
                densite_arbre > 100 & densite_arbre <= 500 ~ "5",
                densite_arbre > 500 & densite_arbre <= 1000 ~ "6",
                densite_arbre > 1000 & densite_arbre <= 1500 ~ "7",
-               densite_arbre > 1500 ~ "8"
-           ))
+               densite_arbre > 1500 ~ "8"),
+              class_densité_info = case_when( # on reclassifie la densite
+                   #densite_arbre == 0 ~ "0", # ici si on utilise 0 plutot que NA
+                   densite_arbre_info > 0 & densite_arbre_info <= 0.2 ~ "1",
+                   densite_arbre_info > 0.2 & densite_arbre_info <= 1 ~ "2",
+                   densite_arbre_info > 1 & densite_arbre_info <= 10 ~ "3",
+                   densite_arbre_info > 10 & densite_arbre_info <= 100 ~ "4",
+                   densite_arbre_info > 100 & densite_arbre_info <= 500 ~ "5",
+                   densite_arbre_info > 500 & densite_arbre_info <= 1000 ~ "6",
+                   densite_arbre_info > 1000 & densite_arbre_info <= 1500 ~ "7",
+                   densite_arbre_info > 1500 ~ "8")
+           )
 
-table(commune_type.shp$class_densité) # un table pour verifier sur les classes de densités par commune 
+table(commune_type.shp$class_densité_info) # un table pour verifier sur les classes de densités par commune 
 
 france_commune_map <- tm_shape(commune_type.shp) # on sauve le shape dans un objet tmap
 
@@ -202,13 +224,15 @@ france_commune_map <- tm_shape(commune_type.shp) # on sauve le shape dans un obj
 legende <- c("]0-0,2]", "]0,2-1]", "]1-10]", "]10-100]", "]100-500]", "]500-1000]", "]1000-1500]", "]1500+" )
 
 france_commune_map +
-    tm_fill(col = "class_densité", palette = "Greens", n = 8, contrast = c(0, 1), # remplie les polygones avec greens
-            title = "Arbres isolés/km²", labels = legende,                        # titre de la legende, label prend legend
+    tm_fill(col = "class_densité_info", palette = "Oranges", n = 8, contrast = c(0, 1), # remplie les polygones avec greens 
+                                                                                  # ici on peut prendre class_densité et 
+                                                                                  # class_densité_info
+            title = "Arbres isolés par km²", labels = legende,                        # titre de la legende, label prend legend
             textNA = "Aucune donnée",                                             # le label des NA
             colorNA = "white") +                                                  # les Na en blanc
     tm_shape(france_simplify.shp) +                                               # rajout d'un shape pour les regions
     tm_borders(col = "grey") +                                                    # juste les bordures en gris
     tm_credits("Source : © les contributeurs d’OpenStreetMap", size = 0.5, position=c("left", "top")) + # sources
     tm_scale_bar(position = c( "center", "BOTTOM")) +                             # legende ici juste sa position
-    tm_legend(title = "Arbres isolés/km² par commune")                            # titre
+    tm_legend(title = "Arbres isolés renseignés (genre ou espèce)/km² par commune")                            # titre
 
