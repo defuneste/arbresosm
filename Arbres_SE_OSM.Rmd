@@ -33,16 +33,35 @@ library(units) # gestion des unités pour ha
 library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
 ```
 
-# lecture des données 
+# Lecture des données 
 
 ```{r}
 arbres_se.shp <- st_read("data/arbres_se_brut.geojson")
 summary(arbres_se.shp)
 ```
 
-# recodage des données
+EPSG : 3946
+25984 point 
+Toutes les infos dans DESCRIPTION qui est une chaine de caractères 
+
+# Recodage des données
 
 ```{r}
 plot(arbres_se.shp)
 ```
 
+
+## Pour le genre
+
+```{r}
+arbres_se.shp$genus <- word(arbres_se.shp$DESCRIPTION, 1) # ici on peut prendre le premier mot et assumer le genre, genus dans OSM
+head(arbres_se.shp$DESCRIPTION)
+```
+
+## pour l'espece
+
+```{r}
+unique(word(arbres_se.shp$DESCRIPTION, 2))
+```
+
+ Il semble y avoir au moins trois problèmes "x", "sp.", et "". 
