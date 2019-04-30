@@ -126,7 +126,7 @@ arbretemp <- nom_champs[,names_champs > 0] # on ne garde que les champs renseign
 # j'ai corrigé le code dans pgadmin et créer une table propre
 # que l'on va importer
 
-arbretemp_tags <- dbGetQuery(con, "SELECT * FROM arbres_osm_point;")
+arbretemp_tags <- dbGetQuery(con, "SELECT * FROM arbre;")
 dim(arbretemp_tags)
 names(arbretemp_tags)
 
@@ -297,7 +297,15 @@ unique(arbres_osm$circumference)
 
 unique(arbres_osm$diameter_crown)
 table((as.integer(arbres_osm$diameter_crown)))
-hist(as.integer(arbres_osm$diameter_crown), breaks = 1:max(as.integer(arbres_osm$diameter_crown), na.rm = T))
+hist(as.integer(arbres_osm$diameter_crown), breaks = 1:max(as.integer(arbres_osm$diameter_crown), na.rm = T), xlim = c(0,30))
+
+### hauteur
+
+unique(arbres_osm$height)
+table((as.integer(arbres_osm$height)))
+hist(as.numeric(arbres_osm$height)[!is.na(as.numeric(arbres_osm$height))], breaks = 0:125, xlim = c(0,40), main = "hauteur")
+
+#, xlim = c(0,30)
 
 ### start_date
 
