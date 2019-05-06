@@ -41,7 +41,9 @@ summary(arbres_se.shp)
 ```
 
 EPSG : 3946
+
 25984 point 
+
 Toutes les infos dans DESCRIPTION qui est une chaine de caractères 
 
 # Recodage des données
@@ -55,13 +57,56 @@ plot(arbres_se.shp)
 
 ```{r}
 arbres_se.shp$genus <- word(arbres_se.shp$DESCRIPTION, 1) # ici on peut prendre le premier mot et assumer le genre, genus dans OSM
-head(arbres_se.shp$DESCRIPTION)
+unique(arbres_se.shp$genus)
 ```
 
-## pour l'espece
+Il y a un "x" en première description et "indéterminé"
+
+```{r}
+arbres_se.shp[arbres_se.shp$genus == "x",]
+```
+
+Il semble que ce ne sont que les cyprès de Leyland et les Cyprés de Leyland glauque qui ne soient concernés. La meilleure solution est probablement de supprimé le "x"" 
+
+```{r}
+arbres_se.shp[arbres_se.shp$genus == "Indéterminé",]
+```
+
+Pour les "indéterminé"s (1072 cas) il me semble que cela correspond à des emplacements vide d'arbres, Ici je suis plus sur l'idée d'un import dans OSM de les supprimé car ils ne correspondent pas à des arbres.
+
+```{r}
+arbres_se.shp <- arbres_se.shp %>% 
+        filter(! genus == "Indéterminé")
+    
+summary(arbres_se.shp)
+```
+
+
+## Pour l'espece
 
 ```{r}
 unique(word(arbres_se.shp$DESCRIPTION, 2))
 ```
 
- Il semble y avoir au moins trois problèmes "x", "sp.", et "". 
+ Il semble y avoir au moins 4 problèmes "x", "sp.", et "". "inconnu", "Indéterminé"
+ 
+```{r}
+## attention c'est du base R, donc pas ultra lisibile
+arbres_se.shp$species <- "0" # initialisation
+arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == ""] <- NA # les espaces en NA pe à verifier
+arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == "sp."] <- NA # sp en NA
+arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == "inconnu"] <- NA # inconnu en NA
+
+# pour "x" on va prendre les trois premier mot pour constituer l'hybride, c'est long car il y a pas mal d'indexation 
+arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == "x"] <- paste(word(arbres_se.shp$DESCRIPTION, 1)[word(arbres_se.shp$DESCRIPTION, 2) == "x"], word(arbres_se.shp$DESCRIPTION, 2)[word(arbres_se.shp$DESCRIPTION, 2) == "x"], word(arbres_se.shp$DESCRIPTION, 3)[word(arbres_se.shp$DESCRIPTION, 2) == "x"])
+# ce qui reste est le cas classic genre + espece
+arbres_se.shp$species[arbres_se.shp$species == "0"] <-
+        unique(paste(word(arbres_se.shp$DESCRIPTION, 1)[arbres_se.shp$species == "0"], word(arbres_se.shp$DESCRIPTION, 2)[arbres_se.shp$species == "0"]))
+
+# un test
+unique(arbres_se.shp$species)
+```
+ 
+ 
+ 
+ 
