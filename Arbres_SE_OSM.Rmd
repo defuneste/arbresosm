@@ -36,7 +36,7 @@ library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
 # Lecture des données 
 
 ```{r}
-arbres_se.shp <- st_read("data/arbres_se_brut.geojson")
+arbres_se.shp <- st_read("data/arbres_se_brut.geojson", stringsAsFactors = FALSE)
 summary(arbres_se.shp)
 ```
 
@@ -60,13 +60,32 @@ arbres_se.shp$genus <- word(arbres_se.shp$DESCRIPTION, 1) # ici on peut prendre 
 unique(arbres_se.shp$genus)
 ```
 
+### Erreurs 
+
 Il y a un "x" en première description et "indéterminé"
+
+#### Pb lié à "x"
 
 ```{r}
 arbres_se.shp[arbres_se.shp$genus == "x",]
 ```
 
-Il semble que ce ne sont que les cyprès de Leyland et les Cyprés de Leyland glauque qui ne soient concernés. La meilleure solution est probablement de supprimé le "x"" 
+Il semble que ce ne sont que les cyprès de Leyland, les Cyprés de Leyland glauque et les chitalpa qui ne soient concernés (36 cas). La meilleure solution est probablement de supprimé le "x"dans le champs DESCRIPTION. 
+
+
+```{r}
+arbres_se.shp$DESCRIPTION[arbres_se.shp$genus == "x"]
+```
+
+```{r}
+# on remplace DESCRIPTION qui posséde un x par une version sans x
+# attention besoin de generer un premier genus
+arbres_se.shp$DESCRIPTION[arbres_se.shp$genus == "x"] <- str_remove(arbres_se.shp$DESCRIPTION[arbres_se.shp$genus == "x"],  "\\s|[x]\\s")
+```
+
+
+
+#### PB lié à "indéterminé"
 
 ```{r}
 arbres_se.shp[arbres_se.shp$genus == "Indéterminé",]
@@ -79,6 +98,15 @@ arbres_se.shp <- arbres_se.shp %>%
         filter(! genus == "Indéterminé")
     
 summary(arbres_se.shp)
+```
+
+### Ré-initialisation de genus
+
+
+
+```{r}
+arbres_se.shp$genus <- word(arbres_se.shp$DESCRIPTION, 1) # ici on peut prendre le premier mot et assumer le genre, genus dans OSM
+unique(arbres_se.shp$genus)
 ```
 
 
