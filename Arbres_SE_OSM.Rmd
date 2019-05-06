@@ -56,8 +56,9 @@ plot(arbres_se.shp)
 ## Pour le genre
 
 ```{r}
+# word() permet de sélectionner des "mots"  dans des lignes de caractères, mot étant définit comme separer par whitespace
 arbres_se.shp$genus <- word(arbres_se.shp$DESCRIPTION, 1) # ici on peut prendre le premier mot et assumer le genre, genus dans OSM
-unique(arbres_se.shp$genus)
+sort(unique(arbres_se.shp$genus), na.last = F)
 ```
 
 ### Erreurs 
@@ -103,7 +104,6 @@ summary(arbres_se.shp)
 ### Ré-initialisation de genus
 
 
-
 ```{r}
 arbres_se.shp$genus <- word(arbres_se.shp$DESCRIPTION, 1) # ici on peut prendre le premier mot et assumer le genre, genus dans OSM
 unique(arbres_se.shp$genus)
@@ -113,28 +113,27 @@ unique(arbres_se.shp$genus)
 ## Pour l'espece
 
 ```{r}
-unique(word(arbres_se.shp$DESCRIPTION, 2))
+sort(unique(word(arbres_se.shp$DESCRIPTION, 2)))
 ```
 
- Il semble y avoir au moins 4 problèmes "x", "sp.", et "". "inconnu", "Indéterminé"
+ Il semble y avoir au moins 4 problèmes "x", "sp.", "" et "inconnu"
  
 ```{r}
 ## attention c'est du base R, donc pas ultra lisibile
-arbres_se.shp$species <- "0" # initialisation
+arbres_se.shp$species <- paste(word(arbres_se.shp$DESCRIPTION, 1), word(arbres_se.shp$DESCRIPTION, 2)) # initialisation
 arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == ""] <- NA # les espaces en NA pe à verifier
 arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == "sp."] <- NA # sp en NA
 arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == "inconnu"] <- NA # inconnu en NA
 
-# pour "x" on va prendre les trois premier mot pour constituer l'hybride, c'est long car il y a pas mal d'indexation 
+# pour "x" on va prendre les trois premiers mots pour constituer l'hybride, c'est long car il y a pas mal d'indexation
+# on indexe par rapport à "x"
 arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == "x"] <- paste(word(arbres_se.shp$DESCRIPTION, 1)[word(arbres_se.shp$DESCRIPTION, 2) == "x"], word(arbres_se.shp$DESCRIPTION, 2)[word(arbres_se.shp$DESCRIPTION, 2) == "x"], word(arbres_se.shp$DESCRIPTION, 3)[word(arbres_se.shp$DESCRIPTION, 2) == "x"])
-# ce qui reste est le cas classic genre + espece
-arbres_se.shp$species[arbres_se.shp$species == "0"] <-
-        unique(paste(word(arbres_se.shp$DESCRIPTION, 1)[arbres_se.shp$species == "0"], word(arbres_se.shp$DESCRIPTION, 2)[arbres_se.shp$species == "0"]))
 
 # un test
-unique(arbres_se.shp$species)
+sort(unique(arbres_se.shp$species), na.last = F)
 ```
  
  
+ Il y a des NA à vérifier
  
  
