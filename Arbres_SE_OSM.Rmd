@@ -86,7 +86,7 @@ arbres_se.shp$DESCRIPTION[arbres_se.shp$genus == "x"] <- str_remove(arbres_se.sh
 
 
 
-#### PB lié à "indéterminé"
+#### Pb lié à "indéterminé"
 
 ```{r}
 arbres_se.shp[arbres_se.shp$genus == "Indéterminé",]
@@ -121,7 +121,7 @@ sort(unique(word(arbres_se.shp$DESCRIPTION, 2)))
 ```{r}
 ## attention c'est du base R, donc pas ultra lisibile
 arbres_se.shp$species <- paste(word(arbres_se.shp$DESCRIPTION, 1), word(arbres_se.shp$DESCRIPTION, 2)) # initialisation
-arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == ""] <- NA # les espaces en NA pe à verifier
+
 arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == "sp."] <- NA # sp en NA
 arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == "inconnu"] <- NA # inconnu en NA
 
@@ -135,5 +135,26 @@ sort(unique(arbres_se.shp$species), na.last = F)
  
  
  Il y a des NA à vérifier
+ 
+ 
+```{r}
+unique(arbres_se.shp$DESCRIPTION[is.na(arbres_se.shp$species)])
+```
+ 
+ 
+ sp. et inconnu sont bien des NA dans species par contre on a deux erreurs: 
+ 
+ * Styphnolobium  japonicum
+ * Xanthocyparis  nootkatensis
+ 
+ Elles sont dues à des whitespace après le nom de genre
+ 
+```{r}
+# dans le cas d'un double whispace entre le genre et l'especes on prend le premier et troisieme mot
+arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == ""] <- paste(word(arbres_se.shp$DESCRIPTION, 1)[word(arbres_se.shp$DESCRIPTION, 2) == ""], word(arbres_se.shp$DESCRIPTION, 3)[word(arbres_se.shp$DESCRIPTION, 2) == ""])
+## on verifie que les deux espèces Styphnolobium et Xanthocyparis
+sort(unique(arbres_se.shp$species), na.last = F)   
+    
+```
  
  
