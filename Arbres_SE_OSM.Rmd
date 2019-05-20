@@ -118,9 +118,9 @@ arbres_se.shp %>%
     geom_bar(stat =  "identity") + # stat = identity car on a un tableau de valeur par genre et pas un count
     coord_flip() + # on change de sens 
     xlab("") +
-    ylab("Nombre d'arbre") +
+    ylab("Nombre d'arbres") +
     #titre 
-    ggtitle("Principaux genre à Saint-Étienne", subtitle = "Genre avec au moins 75 occurences") 
+    ggtitle("Principaux genres à Saint-Étienne", subtitle = "Genres avec au moins 75 occurences") +
     theme(axis.text.y = element_text(size = 8)) # modification de la taille de l'axe y
 ```
 
@@ -177,7 +177,53 @@ sort(unique(arbres_se.shp$species), na.last = F)
  ## Quelques stats de bases
  
 ```{r}
-
+arbres_se.shp %>% 
+    st_set_geometry(value = NULL) %>% # drop de la geometrie 
+    group_by(species) %>% # il faut avoir un champ pour ordomer
+    summarise(comptage = n()) %>%  # donc je passe par un tableau intermediare
+    filter(comptage >= 100  &
+            !is.na(species)   ) %>% ## ici je rajoute un filtre sur les NA
+    ggplot(aes(x = reorder(species, comptage), y = comptage)) + # ici x est ordonné par comptage
+    geom_bar(stat =  "identity") + # stat = identity car on a un tableau de valeur par genre et pas un count
+    coord_flip() + # on change de sens 
+    xlab("") +
+    ylab("Nombre d'arbres") +
+    #titre 
+    ggtitle("Principales éspèces à Saint-Étienne", subtitle = "Espèces avec au moins 100 occurences") +
+    theme(axis.text.y = element_text(size = 8)) # modification de la taille de l'axe y
 ```
  
+ Les platanes sont fortements en tête. Les érables, proches en genre, se divisent en deux especes bien présentes (platanoides et pseudoplatanus) et trois autres espèces moins présentes. 
  
+# les noms vernaculaires
+ 
+Ils sont dans DESCRIPTION après ":"
+
+```{r}
+# un patron qui prend tout après ": "
+patron <- "(?<=\\:\\s).*"
+
+
+arbres_se.shp <- arbres_se.shp %>% 
+    # ici le "species:fr" pourrait être un "taxon:fr" car on pas mal de nom de cultivar
+    # on extrait tout ce qui correspond au patron, le str_extract est plus cours qu'une indexation avec un grep
+    # par contre il ne retourne que le premier cas, si il n'y en a plusieurs ce qui ne devrait pas être notres cas
+    mutate("species:fr" = str_extract(arbres_se.shp$DESCRIPTION, pattern = "(?<=\\:\\s).*"))
+
+# ici c'est juste un graph pour verifier 
+# arbres_se.shp %>% 
+#     st_set_geometry(value = NULL) %>% # drop de la geometrie 
+#     group_by(`species:fr`) %>% # il faut avoir un champ pour ordomer
+#     summarise(comptage = n()) %>%  # donc je passe par un tableau intermediare
+#     filter(comptage >= 100  &
+#             !is.na(`species:fr`)   ) %>% ## ici je rajoute un filtre sur les NA
+#     ggplot(aes(x = reorder(`species:fr`, comptage), y = comptage)) + # ici x est ordonné par comptage
+#     geom_bar(stat =  "identity") + # stat = identity car on a un tableau de valeur par genre et pas un count
+#     coord_flip() + # on change de sens 
+#     xlab("") +
+#     ylab("Nombre d'arbres") +
+#     #titre 
+#     ggtitle("Principales éspèces à Saint-Étienne", subtitle = "Espèces avec au moins 100 occurences") +
+#     theme(axis.text.y = element_text(size = 8)) # modification de la taille de l'axe y
+```
+
