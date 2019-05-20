@@ -227,3 +227,23 @@ arbres_se.shp <- arbres_se.shp %>%
 #     theme(axis.text.y = element_text(size = 8)) # modification de la taille de l'axe y
 ```
 
+# verfification occupé - libre
+
+Il y a dans DESCRIPTION un "emplacement" pour chaque arbre qui peut être qualifié soit de libre soit occupé. 
+
+
+# Préparation des données
+
+## Selection et filtre des variables
+
+```{r}
+arbres_se.final.shp <- arbres_se.shp %>% 
+  rename("ref:FR:Saint-Etienne:tree" = gid) %>%
+  mutate(diameter_crown = rayoncouro * 2,
+         "source:name" = "Arbres d'alignement de la ville de Saint-Etienne",
+         denotation = "avenue") %>%
+  select(-APIC_CDATE, -APIC_MDATE, -NATURE, -CD_LIMCO, -RIVOLI)
+summary(arbres_lyon_final.shp)
+```
+
+## leaf_type et leaf_cycle
