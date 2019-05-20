@@ -92,7 +92,7 @@ arbres_se.shp$DESCRIPTION[arbres_se.shp$genus == "x"] <- str_remove(arbres_se.sh
 arbres_se.shp[arbres_se.shp$genus == "Indéterminé",]
 ```
 
-Pour les "indéterminé"s (1072 cas) il me semble que cela correspond à des emplacements vide d'arbres, Ici je suis plus sur l'idée d'un import dans OSM de les supprimé car ils ne correspondent pas à des arbres.
+Pour les "indéterminé"s (1072 cas) il me semble que cela correspond à des emplacements vide d'arbres, Ici je suis plus sur l'idée d'un import dans OSM de les supprimer car ils ne correspondent pas à des arbres.
 
 ```{r}
 arbres_se.shp <- arbres_se.shp %>% 
@@ -108,9 +108,26 @@ summary(arbres_se.shp)
 arbres_se.shp$genus <- word(arbres_se.shp$DESCRIPTION, 1) # ici on peut prendre le premier mot et assumer le genre, genus dans OSM
 unique(arbres_se.shp$genus)
 ```
+```{r}
+arbres_se.shp %>% 
+    st_set_geometry(value = NULL) %>% # drop de la geometrie 
+    group_by(genus) %>% # il faut avoir un champ pour ordomer
+    summarise(comptage = n()) %>%  # donc je passe par un tableau intermediare
+    filter(comptage >= 75) %>% 
+    ggplot(aes(x = reorder(genus, comptage), y = comptage)) + # ici x est ordonné par comptage
+    geom_bar(stat =  "identity") + # stat = identity car on a un tableau de valeur par genre et pas un count
+    coord_flip() + # on change de sens 
+    xlab("") +
+    ylab("Nombre d'arbre") +
+    #titre 
+    ggtitle("Principaux genre à Saint-Étienne", subtitle = "Genre avec au moins 75 occurences") 
+    theme(axis.text.y = element_text(size = 8)) # modification de la taille de l'axe y
+```
 
 
 ## Pour l'espece
+
+### exploration et correction 
 
 ```{r}
 sort(unique(word(arbres_se.shp$DESCRIPTION, 2)))
@@ -155,6 +172,12 @@ arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == ""] <- paste(word(ar
 ## on verifie que les deux espèces Styphnolobium et Xanthocyparis
 sort(unique(arbres_se.shp$species), na.last = F)   
     
+```
+ 
+ ## Quelques stats de bases
+ 
+```{r}
+
 ```
  
  
