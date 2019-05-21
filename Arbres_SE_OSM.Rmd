@@ -63,7 +63,7 @@ sort(unique(arbres_se.shp$genus), na.last = F)
 
 ### Erreurs 
 
-Il y a un "x" en première description et "indéterminé"
+Il y a un "x" , "indéterminé" et "inconnu"
 
 #### Pb lié à "x"
 
@@ -101,12 +101,46 @@ arbres_se.shp <- arbres_se.shp %>%
 summary(arbres_se.shp)
 ```
 
+## pb lié à inconnu
+
+```{r}
+arbres_se.shp[arbres_se.shp$genus == "inconnu",]
+```
+
+### Localisation d' inconnu
+
+```{r}
+
+SE_inconnu.shp <- arbres_se.shp %>% 
+    filter(genus == "inconnu") %>% 
+    st_transform(4326)
+
+
+carto_SE <- leaflet() %>%
+    addTiles() %>%
+    addCircleMarkers(data = SE_inconnu.shp, radius = 2) 
+  
+carto_SE
+
+```
+
+Ce n'est pas 'evident de savoir à quoi cela correspond (certains sont sur la photo aerienne d'autres pas), je suis d'avis de ne pas garder
+
+```{r}
+arbres_se.shp <- arbres_se.shp %>% 
+        filter(! genus == "inconnu")
+    
+summary(arbres_se.shp)
+```
+
+
+
 ### Ré-initialisation de genus
 
 
 ```{r}
 arbres_se.shp$genus <- word(arbres_se.shp$DESCRIPTION, 1) # ici on peut prendre le premier mot et assumer le genre, genus dans OSM
-unique(arbres_se.shp$genus)
+sort(unique(arbres_se.shp$genus))
 ```
 ```{r}
 arbres_se.shp %>% 
@@ -228,8 +262,29 @@ arbres_se.shp <- arbres_se.shp %>%
 ```
 
 # verfification occupé - libre
+## Extraction
+Il y a dans DESCRIPTION un "emplacement" pour chaque arbre qui peut être qualifié soit de Vide soit Occupé. 
 
-Il y a dans DESCRIPTION un "emplacement" pour chaque arbre qui peut être qualifié soit de libre soit occupé. 
+```{r}
+# occupation prend la valeur de 1 pour tous
+arbres_se.shp$occupation <- 1 
+# si "Vide" est present prend la valeur 0, on le fait via une indexation sur un grep
+arbres_se.shp$occupation[grep(pattern = "Vide" , arbres_se.shp$DESCRIPTION)] <- 0
+# table pour resume
+table(arbres_se.shp$occupation)
+```
+
+Il y a 163 "Emplacement Vide". Verifions ensuite si il y a patron quelconque derrière. 
+
+## Verification 
+
+```{r}
+arbres_se.shp %>% 
+    st_set_geometry(value = NULL) %>% 
+    filter(occupation == 0) %>% 
+    select(genus, species)
+```
+
 
 
 # Préparation des données
