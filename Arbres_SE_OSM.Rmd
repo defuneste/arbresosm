@@ -285,7 +285,7 @@ arbres_se.shp %>%
     select(genus, species)
 ```
 
-
+Il ne semble pas qu'il y ai des différences notables.  
 
 # Préparation des données
 
@@ -293,12 +293,42 @@ arbres_se.shp %>%
 
 ```{r}
 arbres_se.final.shp <- arbres_se.shp %>% 
-  rename("ref:FR:Saint-Etienne:tree" = gid) %>%
-  mutate(diameter_crown = rayoncouro * 2,
-         "source:name" = "Arbres d'alignement de la ville de Saint-Etienne",
-         denotation = "avenue") %>%
-  select(-APIC_CDATE, -APIC_MDATE, -NATURE, -CD_LIMCO, -RIVOLI)
-summary(arbres_lyon_final.shp)
+  rename("ref:FR:Saint-Etienne:tree" = GID) %>% # on garde l'id de la BD
+  mutate("source:name" = "Arbres d'alignement de la ville de Saint-Etienne", #source des données
+         denotation = "avenue") %>% # arbre d'avenue, c'est pas tjrs le cas 
+  select(-APIC_CDATE, -APIC_MDATE, -NATURE, -CD_LIMCO, -RIVOLI) # on enleve les champs non utiles dans OSM
+summary(arbres_se.final.shp) # une verif
 ```
 
 ## leaf_type et leaf_cycle
+
+
+```{r}
+leaf <- read.csv2("data/leaft_type.csv", sep = "\t", stringsAsFactors = FALSE) # lecture de csv
+leaf[leaf$leaf_cycle == "evergreen and deciduous",] <- "deciduous and evergreen" # verif si besoin de le faire pour le second 
+head(leaf)
+leaf2 <- read.csv2("data/leaf_type_ajout.csv", sep = ",", stringsAsFactors = FALSE) # ouverture du fichier complementaire
+summary(leaf2)
+
+leaf_tot <- rbind(leaf,leaf2) #on ajoute les deux
+leaf_tot$Genus <- str_trim(leaf_tot$Genus) # on supprime des whitespaces
+# sort(leaf_tot$Genus)
+
+```
+
+Le fichier CSV provient du [wiki](https://wiki.openstreetmap.org/wiki/FR:Tag:natural%3Dtree).
+
+Il pose un probleme interessant : des genres peuvent avoir des espèces décidues (deciduous) et sempervirentes (evergreen) : dans les chênes il y a les chênes pubescents et les chênes verts. 
+
+
+```{r, "verfication des genres presents"}
+sort(unique(arbres_se.final.shp$genus)[unique(arbres_se.final.shp$genus) %in% leaf_tot$Genus]) # liste des genres presents
+sort(unique(arbres_se.final.shp$genus)[!(unique(arbres_se.final.shp$genus) %in% leaf_tot$Genus)]) # liste des genres absents
+```
+
+```{r, "join sur genus"}
+arbres_se.final.shp <- arbres_se.final.shp %>% # une jointure
+               left_join(leaf_tot, by = c("genus" = "Genus"))
+summary(arbres_se.final.shp)
+```
+

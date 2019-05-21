@@ -1,70 +1,330 @@
-Genus 	leaf_cycle 	leaf_type 
-Acacia 	deciduous 	broadleaved 
-Acer 	deciduous and evergreen 	broadleaved 
-Aesculus 	deciduous 	broadleaved 
-Ailanthus 	deciduous 	broadleaved 
-Albizzia 	deciduous 	broadleaved 
-Alnus 	deciduous 	broadleaved 
-Amelanchier 	deciduous 	broadleaved 
-Betula 	deciduous 	broadleaved 
-Broussonetia 	deciduous 	broadleaved 
-Buxus 	evergreen 	broadleaved 
-Carpinus 	deciduous 	broadleaved 
-Castanea 	deciduous 	broadleaved 
-Catalpa 	deciduous and evergreen 	broadleaved 
-Cedrela 	deciduous and evergreen 	broadleaved 
-Celtis 	deciduous 	broadleaved 
-Cercidiphyllum 	deciduous 	broadleaved 
-Cercis 	deciduous 	broadleaved 
-Chimonanthus 	deciduous and evergreen 	broadleaved 
-Cladrastis 	deciduous 	broadleaved 
-Cornus 	deciduous and evergreen 	broadleaved 
-Corylus 	deciduous 	broadleaved 
-Crataegus 	deciduous 	broadleaved 
-Davidia 	deciduous 	broadleaved 
-Diospyros 	deciduous 	broadleaved 
-Elaeagnus 	deciduous and evergreen 	broadleaved 
-Eucalyptus 	deciduous and evergreen 	broadleaved 
-Euodia 	deciduous 	broadleaved 
-Fagus 	deciduous 	broadleaved 
-Firmiana 	deciduous 	broadleaved 
-Fraxinus 	deciduous and evergreen 	broadleaved 
-Gleditsia 	deciduous 	broadleaved 
-Gymnocladus 	deciduous 	broadleaved 
-Hibiscus 	deciduous and evergreen 	broadleaved 
-Idesia 	deciduous 	broadleaved 
-Juglans 	deciduous 	broadleaved 
-Koelreuteria 	deciduous 	broadleaved 
-Lagerstroemia 	deciduous and evergreen 	broadleaved 
-Ligustrum 	deciduous and evergreen 	broadleaved 
-Liquidambar 	deciduous 	broadleaved 
-Liriodendron 	deciduous 	broadleaved 
-Maclura 	deciduous 	broadleaved 
-Magnolia 	deciduous and evergreen 	broadleaved 
-Malus 	deciduous 	broadleaved 
-Melia 	deciduous 	broadleaved 
-Mespilus 	deciduous 	broadleaved 
-Morus 	deciduous 	broadleaved 
-Nyssa 	deciduous 	broadleaved 
-Olea 	evergreen 	broadleaved 
-Ostrya 	deciduous 	broadleaved 
-Parrotia 	deciduous 	broadleaved 
-Paulownia 	deciduous 	broadleaved 
-Phellodendron 	deciduous 	broadleaved 
-Platanus 	deciduous 	broadleaved 
-Populus 	deciduous 	broadleaved 
-Prunus 	deciduous and evergreen 	broadleaved 
-Ptelea 	deciduous 	broadleaved 
-Pterocarya 	deciduous 	broadleaved 
-Pyrus 	deciduous and evergreen 	broadleaved 
-Rhus 	deciduous 	broadleaved 
-Robinia 	deciduous 	broadleaved 
-Salix 	deciduous 	broadleaved 
-Sambucus 	deciduous 	broadleaved 
-Sassafras 	deciduous 	broadleaved 
-Semiarundinaria 	deciduous 	broadleaved 
-Sophora 	deciduous 	broadleaved 
-Sorbus 	deciduous 	broadleaved 
-Syringa 	deciduous 	broadleaved 
-Ulmus 	deciduous 	broadleaved 
-Zelkova 	deciduous 	broadleaved 
+Genus ,leaf_cycle ,leaf_type 
+Abies ,evergreen,needleleaved 
+Acacia ,deciduous ,broadleaved 
+Acanthophoenix ,evergreen,broadleaved 
+Acer ,deciduous and evergreen ,broadleaved 
+Acoelorrhaphe ,evergreen,broadleaved 
+Acrocomia ,evergreen,broadleaved 
+Actinokentia ,evergreen,broadleaved 
+Actinorhytis ,evergreen,broadleaved 
+Adonidia ,evergreen,broadleaved 
+Aesculus ,deciduous ,broadleaved 
+Ailanthus ,deciduous ,broadleaved 
+Aiphanes ,evergreen,broadleaved 
+Albizia ,deciduous ,broadleaved 
+Allagoptera ,evergreen,broadleaved 
+Alnus ,deciduous ,broadleaved 
+Amelanchier ,deciduous ,broadleaved 
+Ammandra ,evergreen,broadleaved 
+Aphandra ,evergreen,broadleaved 
+Araucaria ,evergreen,needleleaved 
+Arbutus ,evergreen ,broadleaved 
+Archontophoenix ,evergreen,broadleaved 
+Areca ,evergreen,broadleaved 
+Armeniaca ,deciduous and evergreen ,broadleaved 
+Arenga ,evergreen,broadleaved 
+Asterogyne ,evergreen,broadleaved 
+Astrocaryum ,evergreen,broadleaved 
+Attalea ,evergreen,broadleaved 
+Bactris ,evergreen,broadleaved 
+Balaka ,evergreen,broadleaved 
+Barcella ,evergreen,broadleaved 
+Basselinia ,evergreen,broadleaved 
+Beccariophoenix ,evergreen,broadleaved 
+Bentinckia ,evergreen,broadleaved 
+Betula ,deciduous ,broadleaved 
+Bismarckia ,evergreen,broadleaved 
+Borassodendron ,evergreen,broadleaved 
+Borassus ,evergreen,broadleaved 
+Brahea ,evergreen,broadleaved 
+Brassiophoenix ,evergreen,broadleaved 
+Broussonetia ,decidious ,broadleaved 
+Buddleja ,decidious ,broadleaved 
+Burretiokentia ,evergreen,broadleaved 
+Butia ,evergreen,broadleaved 
+Buxus ,evergreen ,broadleaved 
+Calamus ,evergreen,broadleaved 
+Calocedrus ,evergreen,needleleaved 
+Calyptrocalyx ,evergreen,broadleaved 
+Calyptrogyne ,evergreen,broadleaved 
+Calyptronoma ,evergreen,broadleaved 
+Carpentaria ,evergreen,broadleaved 
+Carpinus ,deciduous ,broadleaved 
+Carpoxylon ,evergreen,broadleaved 
+Carya ,deciduous ,broadleaved 
+Caryota ,evergreen,broadleaved 
+Castanea ,deciduous ,broadleaved 
+Catalpa ,deciduous and evergreen ,broadleaved 
+Cathaya ,evergreen,needleleaved 
+Cedrela ,deciduous and evergreen ,broadleaved 
+Celtis ,deciduous ,broadleaved 
+Cedrus ,evergreen,needleleaved 
+Cephalotaxus ,evergreen,needleleaved 
+Cerasus ,deciduous ,broadleaved 
+Ceratolobus ,evergreen,broadleaved 
+Ceratozamia ,evergreen,needleleaved 
+Cercidiphyllum ,deciduous ,broadleaved 
+Cercis ,deciduous ,broadleaved 
+Ceroxylon ,evergreen,broadleaved 
+Chamaecyparis ,evergreen,needleleaved 
+Chamaedorea ,evergreen,broadleaved 
+Chamaerops ,evergreen,broadleaved 
+Chambeyronia ,evergreen,broadleaved 
+Chelyocarpus ,evergreen,broadleaved 
+Chigua ,evergreen,needleleaved 
+Chitalpa ,deciduous ,broadleaved 
+Chuniophoenix ,evergreen,broadleaved 
+Cinnamomum ,deciduous and evergreen ,broadleaved 
+Cistus ,evergreen ,broadleaved 
+Citrus ,evergreen ,broadleaved 
+Clerodendrum ,deciduous and evergreen ,broadleaved 
+Clinosperma ,evergreen,broadleaved 
+Clinostigma ,evergreen,broadleaved 
+Coccothrinax ,evergreen,broadleaved 
+Cocos ,evergreen,broadleaved 
+Colpothrinax ,evergreen,broadleaved 
+Copernicia ,evergreen,broadleaved 
+Corylus ,deciduous ,broadleaved 
+Cornus ,deciduous and evergreen ,broadleaved 
+Cortaderia ,deciduous and evergreen ,broadleaved 
+Cotinus ,deciduous ,broadleaved 
+Corypha ,evergreen,broadleaved 
+Crataegus ,deciduous ,broadleaved 
+Cryosophila ,evergreen,broadleaved 
+Cryptomeria ,evergreen,needleleaved 
+Cunninghamia ,evergreen,needleleaved 
+Cupressocyparis ,evergreen,needleleaved 
+Cupressus ,evergreen,needleleaved 
+Cycas ,evergreen,needleleaved 
+Cydonia ,deciduous ,broadleaved 
+Cyphokentia ,evergreen,broadleaved 
+Cyphophoenix ,evergreen,broadleaved 
+Cyphosperma ,evergreen,broadleaved 
+Cyrtostachys ,evergreen,broadleaved 
+Davidia ,deciduous ,broadleaved 
+Daemonorops ,evergreen,broadleaved 
+Deckenia ,evergreen,broadleaved 
+Desmoncus ,evergreen,broadleaved 
+Dictyocaryum ,evergreen,broadleaved 
+Dictyosperma ,evergreen,broadleaved 
+Dioon ,evergreen,needleleaved 
+Diospyros ,deciduous ,broadleaved 
+Dransfieldia ,evergreen,broadleaved 
+Drymophloeus ,evergreen,broadleaved 
+Dypsis ,evergreen,broadleaved 
+Elaeis ,evergreen,broadleaved 
+Elaeagnus ,deciduous and evergreen ,broadleaved 
+Eleiodoxa ,evergreen,broadleaved 
+Encephalartos ,evergreen,needleleaved 
+Ephedra ,evergreen,needleleaved 
+Eremospatha ,evergreen,broadleaved 
+Ehretia ,deciduous and evergreen ,broadleaved 
+Eucalyptus ,deciduous and evergreen ,broadleaved 
+Eucommia ,deciduous ,broadleaved 
+Euodia ,deciduous ,broadleaved 
+Eugeissona ,evergreen,broadleaved 
+Euterpe ,evergreen,broadleaved 
+Fagus ,deciduous ,broadleaved 
+Ficus ,deciduous,broadleaved 
+Fraxinus ,deciduous and evergreen ,broadleaved 
+Gaussia ,evergreen,broadleaved 
+Geonoma ,evergreen,broadleaved 
+Ginkgo ,deciduous,broadleaved 
+Gleditsia ,deciduous ,broadleaved 
+Gnetum ,evergreen,broadleaved 
+Guihaia ,evergreen,broadleaved 
+Gymnocladus ,deciduous ,broadleaved 
+Hamamelis ,deciduous ,broadleaved 
+Hedyscepe ,evergreen,broadleaved 
+Hemithrinax ,evergreen,broadleaved 
+Heterospathe ,evergreen,broadleaved 
+Hippophae ,deciduous ,broadleaved 
+Howea ,evergreen,broadleaved 
+Humulus ,deciduous ,broadleaved 
+Hydriastele ,evergreen,broadleaved 
+Hyophorbe ,evergreen,broadleaved 
+Hyospathe ,evergreen,broadleaved 
+Hyphaene ,evergreen,broadleaved 
+Iguanura ,evergreen,broadleaved 
+Ilex ,evergreen ,broadleaved 
+Iriartea ,evergreen,broadleaved 
+Iriartella ,evergreen,broadleaved 
+Itaya ,evergreen,broadleaved 
+Johannesteijsmannia ,evergreen,broadleaved 
+Juania ,evergreen,broadleaved 
+Jubaea ,evergreen,broadleaved 
+Jubaeopsis ,evergreen,broadleaved 
+Juglans ,deciduous ,broadleaved 
+Juniperus ,evergreen,needleleaved 
+Kentiopsis ,evergreen,broadleaved 
+Kerriodoxa ,evergreen,broadleaved 
+Keteleeria ,evergreen,needleleaved 
+Koelreuteria ,deciduous ,broadleaved 
+Korthalsia ,evergreen,broadleaved 
+Laburnum ,deciduous ,broadleaved 
+Laccospadix ,evergreen,broadleaved 
+Laccosperma ,evergreen,broadleaved 
+Lagerstroemia ,deciduous and evergreen ,broadleaved 
+Larix ,evergreen and deciduous,needleleaved 
+Latania ,evergreen,broadleaved 
+Lavandula ,evergreen ,broadleaved 
+Lemurophoenix ,evergreen,broadleaved 
+Leopoldinia ,evergreen,broadleaved 
+Lepidocaryum ,evergreen,broadleaved 
+Lepidorrhachis ,evergreen,broadleaved 
+Lepidozamia ,evergreen,needleleaved 
+Leucothrinax ,evergreen,broadleaved 
+Libocedrus ,evergreen ,needleleaved 
+Licuala ,evergreen,broadleaved 
+Ligustrum ,deciduous and evergreen ,broadleaved 
+Linospadix ,evergreen,broadleaved 
+Liquidambar ,deciduous ,broadleaved 
+Liriodendron ,deciduous ,broadleaved 
+Livistona ,evergreen,broadleaved 
+Lodoicea ,evergreen,broadleaved 
+Loxococcus ,evergreen,broadleaved 
+Lytocaryum ,evergreen,broadleaved 
+Maclura,deciduous ,broadleaved 
+Macrozamia ,evergreen,needleleaved 
+Magnolia ,deciduous and evergreen ,broadleaved 
+Malus ,deciduous ,broadleaved 
+Manicaria ,evergreen,broadleaved 
+Marojejya ,evergreen,broadleaved 
+Masoala ,evergreen,broadleaved 
+Mauritia ,evergreen,broadleaved 
+Mauritiella ,evergreen,broadleaved 
+Maxburretia ,evergreen,broadleaved 
+Medemia ,evergreen,broadleaved 
+Melia ,deciduous ,broadleaved 
+Mespilus ,deciduous ,broadleaved 
+Metasequoia ,evergreen,needleleaved 
+Metroxylon ,evergreen,broadleaved 
+Microbiota ,evergreen,needleleaved 
+Microcycas ,evergreen,needleleaved 
+Morus ,deciduous ,broadleaved 
+Myrialepis ,evergreen,broadleaved 
+Nannorrhops ,evergreen,broadleaved 
+Nenga ,evergreen,broadleaved 
+Neonicholsonia ,evergreen,broadleaved 
+Neoveitchia ,evergreen,broadleaved 
+Nephrosperma ,evergreen,broadleaved 
+Nerium ,evergreen ,broadleaved 
+Normanbya ,evergreen,broadleaved 
+Nothofagus ,deciduous and evergreen ,broadleaved 
+Nothotsuga ,evergreen,needleleaved 
+Nypa ,evergreen,broadleaved 
+Pistacia ,deciduous and evergreen ,broadleaved 
+Platanus ,deciduous ,broadleaved 
+Oenocarpus ,evergreen,broadleaved 
+Olea ,evergreen ,broadleaved 
+Oncocalamus ,evergreen,broadleaved 
+Oncosperma ,evergreen,broadleaved 
+Orania ,evergreen,broadleaved 
+Oraniopsis ,evergreen,broadleaved 
+Ostrya ,deciduous ,broadleaved 
+Parajubaea ,evergreen,broadleaved 
+Pelagodoxa ,evergreen,broadleaved 
+Phoenicophorium ,evergreen,broadleaved 
+Phoenix ,evergreen,broadleaved 
+Pholidocarpus ,evergreen,broadleaved 
+Pholidostachys ,evergreen,broadleaved 
+Physokentia ,evergreen,broadleaved 
+Phytelephas ,evergreen,broadleaved 
+Parrotia ,deciduous ,broadleaved 
+Paulownia ,deciduous ,broadleaved 
+Phillyrea ,evergreen ,broadleaved 
+Photinia ,deciduous ,broadleaved 
+Phyllostachys ,evergreen ,broadleaved 
+Picea ,evergreen,needleleaved 
+Pyrus ,deciduous and evergreen ,broadleaved 
+Pigafetta ,evergreen,broadleaved 
+Pinanga ,evergreen,broadleaved 
+Pinus ,evergreen,needleleaved 
+Plectocomia ,evergreen,broadleaved 
+Plectocomiopsis ,evergreen,broadleaved 
+Podocarpus ,evergreen,needleleaved 
+Podococcus ,evergreen,broadleaved 
+Pogonotium ,evergreen,broadleaved 
+Ponapea ,evergreen,broadleaved 
+Poncirus ,deciduous ,broadleaved 
+Populus ,deciduous ,broadleaved 
+Prestoea ,evergreen,broadleaved 
+Pritchardia ,evergreen,broadleaved 
+Pritchardiopsis ,evergreen,broadleaved 
+Prunus ,deciduous and evergreen ,broadleaved 
+Pseudolarix ,evergreen,needleleaved 
+Pseudophoenix ,evergreen,broadleaved 
+Pseudotsuga ,evergreen,needleleaved 
+Pterocarya ,deciduous ,broadleaved 
+Pteroceltis ,deciduous ,broadleaved 
+Ptychococcus ,evergreen,broadleaved 
+Ptychosperma ,evergreen,broadleaved 
+Quercus ,deciduous and evergreen,broadleaved 
+Raphia ,evergreen,broadleaved 
+Ravenea ,evergreen,broadleaved 
+Reinhardtia ,evergreen,broadleaved 
+Retispatha ,evergreen,broadleaved 
+Rhapidophyllum ,evergreen,broadleaved 
+Rhapis ,evergreen,broadleaved 
+Rhododendron ,deciduous and evergreen ,broadleaved 
+Rhopaloblaste ,evergreen,broadleaved 
+Rhopalostylis ,evergreen,broadleaved 
+Rhus,deciduous ,broadleaved 
+Robinia ,deciduous ,broadleaved 
+Roscheria ,evergreen,broadleaved 
+Roystonea ,evergreen,broadleaved 
+Sabal ,evergreen,broadleaved 
+Sabinaria ,evergreen,broadleaved 
+Sambucus ,deciduous ,broadleaved 
+Salacca ,evergreen,broadleaved 
+Salix ,deciduous ,broadleaved 
+Saribus ,evergreen,broadleaved 
+Satakentia ,evergreen,broadleaved 
+Satranala ,evergreen,broadleaved 
+Schinus ,evergreen,broadleaved 
+Schippia ,evergreen,broadleaved 
+Sciadopitus ,evergreen,needleleaved 
+Sclerosperma ,evergreen,broadleaved 
+Semiarundinaria ,deciduous ,broadleaved 
+Sequoia ,evergreen,needleleaved 
+Sequoiadendron ,evergreen,needleleaved 
+Serenoa ,evergreen,broadleaved 
+Socratea ,evergreen,broadleaved 
+Solfia ,evergreen,broadleaved 
+Sommieria ,evergreen,broadleaved 
+Sophora ,deciduous ,broadleaved 
+Sorbus ,deciduous ,broadleaved 
+Sterculia ,deciduous ,broadleaved 
+Styphnolobium ,deciduous ,broadleaved 
+Syagrus ,evergreen,broadleaved 
+Synechanthus ,evergreen,broadleaved 
+Syringa ,deciduous ,broadleaved 
+Tahina ,evergreen,broadleaved 
+Tamarix ,deciduous and evergreen ,needleleaved 
+Taxodium ,evergreen,needleleaved 
+Taxus ,evergreen,needleleaved 
+Tectiphiala ,evergreen,broadleaved 
+Thrinax ,evergreen,broadleaved 
+Thuja ,evergreen,needleleaved 
+Thujopsis ,evergreen,needleleaved 
+Tilia ,deciduous,broadleaved 
+Torreya ,evergreen,needleleaved 
+Trachycarpus ,evergreen,broadleaved 
+Trithrinax ,evergreen,broadleaved 
+Tsuga ,evergreen,needleleaved 
+Ulmus ,deciduous ,broadleaved 
+Veitchia ,evergreen,broadleaved 
+Verschaffeltia ,evergreen,broadleaved 
+Viburnum ,deciduous and evergreen ,broadleaved 
+Voanioala ,evergreen,broadleaved 
+Wallichia ,evergreen,broadleaved 
+Washingtonia ,evergreen,broadleaved 
+Welfia ,evergreen,broadleaved 
+Welwitschia ,deciduous,broadleaved 
+Wendlandiella ,evergreen,broadleaved 
+Wettinia ,evergreen,broadleaved 
+Wodyetia ,evergreen,broadleaved 
+Xanthocyparis ,evergreen ,needleleaved 
+Zamia ,evergreen,needleleaved 
+Zelkova ,deciduous ,broadleaved 
+Zombia ,evergreen,broadleaved 

@@ -239,17 +239,18 @@ sort(unique(arbres_lyon_final.shp$genus)[!(unique(arbres_lyon_final.shp$genus) %
 ```
 
 ```{r, "ajout des genres manquants"}
-leaf2 <- read.csv2("leaf_type_ajout.csv", sep = "\t", stringsAsFactors = FALSE) # ouverture du fichier complementaire
-summary(leaf2)
-
-leaf_tot <- rbind(leaf,leaf2) # rajout au fichier tiré du CSV
-summary(leaf_tot)
-```
-
-```{r, "join sur genus"}
-arbres_lyon_final.shp <- arbres_lyon_final.shp %>% # une jointure
-                left_join(leaf_tot, by = c("genus" = "Genus"))
-summary(arbres_lyon_final.shp)
+# Il y a une erreur a corrigé avec des whitespaces
+# leaf2 <- read.csv2("leaf_type_ajout.csv", sep = "\t", stringsAsFactors = FALSE) # ouverture du fichier complementaire
+# summary(leaf2)
+# 
+# leaf_tot <- rbind(leaf,leaf2) # rajout au fichier tiré du CSV
+# summary(leaf_tot)
+# ```
+# 
+# ```{r, "join sur genus"}
+# arbres_lyon_final.shp <- arbres_lyon_final.shp %>% # une jointure
+#                 left_join(leaf_tot, by = c("genus" = "Genus"))
+# summary(arbres_lyon_final.shp)
 ```
 
 
