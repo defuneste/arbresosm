@@ -239,7 +239,7 @@ sort(unique(arbres_lyon_final.shp$genus)[!(unique(arbres_lyon_final.shp$genus) %
 ```
 
 ```{r, "ajout des genres manquants"}
-leaf2 <- read.csv2("data/leaf_type_ajout.csv", sep = ",", stringsAsFactors = FALSE) # ouverture du fichier complementaire
+leaf2 <- read.csv2("leaf_type_ajout.csv", sep = "\t", stringsAsFactors = FALSE) # ouverture du fichier complementaire
 summary(leaf2)
 summary(leaf2)
 leaf2 <- leaf2 %>% 
