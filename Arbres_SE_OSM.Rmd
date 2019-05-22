@@ -296,7 +296,7 @@ arbres_se.final.shp <- arbres_se.shp %>%
   rename("ref:FR:Saint-Etienne:tree" = GID) %>% # on garde l'id de la BD
   mutate("source:name" = "Arbres d'alignement de la ville de Saint-Etienne", #source des données
          denotation = "avenue") %>% # arbre d'avenue, c'est pas tjrs le cas 
-  select(-APIC_CDATE, -APIC_MDATE, -NATURE, -CD_LIMCO, -RIVOLI) # on enleve les champs non utiles dans OSM
+  select(-APIC_CDATE, -APIC_MDATE, -NATURE, -CD_LIMCO, -RIVOLI, -occupation, -DESCRIPTION) # on enleve les champs non utiles dans OSM
 summary(arbres_se.final.shp) # une verif
 ```
 
@@ -304,15 +304,12 @@ summary(arbres_se.final.shp) # une verif
 
 
 ```{r}
-leaf <- read.csv2("data/leaft_type.csv", sep = "\t", stringsAsFactors = FALSE) # lecture de csv
-leaf[leaf$leaf_cycle == "evergreen and deciduous",] <- "deciduous and evergreen" # verif si besoin de le faire pour le second 
-head(leaf)
-leaf2 <- read.csv2("data/leaf_type_ajout.csv", sep = ",", stringsAsFactors = FALSE) # ouverture du fichier complementaire
-summary(leaf2)
 
-leaf_tot <- rbind(leaf,leaf2) #on ajoute les deux
-leaf_tot$Genus <- str_trim(leaf_tot$Genus) # on supprime des whitespaces
-# sort(leaf_tot$Genus)
+leaf2 <- read.csv2("data/leaf_type_ajout.csv", sep = ",", stringsAsFactors = FALSE) # ouverture du fichier 
+summary(leaf2)
+leaf2 <- leaf2 %>% 
+    mutate(Genus = str_trim(leaf2$Genus))
+unique(leaf2$Genus)
 
 ```
 
@@ -322,13 +319,25 @@ Il pose un probleme interessant : des genres peuvent avoir des espèces décidue
 
 
 ```{r, "verfication des genres presents"}
-sort(unique(arbres_se.final.shp$genus)[unique(arbres_se.final.shp$genus) %in% leaf_tot$Genus]) # liste des genres presents
-sort(unique(arbres_se.final.shp$genus)[!(unique(arbres_se.final.shp$genus) %in% leaf_tot$Genus)]) # liste des genres absents
+sort(unique(arbres_se.final.shp$genus)[unique(arbres_se.final.shp$genus) %in% leaf2$Genus]) # liste des genres presents
+sort(unique(arbres_se.final.shp$genus)[!(unique(arbres_se.final.shp$genus) %in% leaf2$Genus)]) # liste des genres absents
 ```
 
 ```{r, "join sur genus"}
 arbres_se.final.shp <- arbres_se.final.shp %>% # une jointure
-               left_join(leaf_tot, by = c("genus" = "Genus"))
+               left_join(leaf2, by = c("genus" = "Genus"))
 summary(arbres_se.final.shp)
+head(arbres_se.final.shp)
+```
+
+
+### export 
+
+```{r, message=FALSE, "sous fichiers pour facilier l'export"}
+## il faut dans ce cas transformer pour le bon CSR
+arbres_se.final.shp<- st_transform(arbres_se.final.shp, EPSG = 4326)
+
+## un gros json pour le moment dans l'avenir pe le diviser
+st_write(arbres_se.final.shp, dsn = "arbres_se.final.geojson")
 ```
 
