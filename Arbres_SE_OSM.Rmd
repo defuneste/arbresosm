@@ -14,6 +14,7 @@ library(tibble)
 library(tidyr)
 library(lubridate) # date
 library(stringr) # modif sur character
+library(rlist)
 
 ### visualisation
 library(ggplot2) # la visualisation
@@ -331,7 +332,7 @@ head(arbres_se.final.shp)
 ```
 
 
-### export 
+# Export 
 
 ```{r, message=FALSE, "sous fichiers pour facilier l'export"}
 ## il faut dans ce cas transformer pour le bon CSR
@@ -339,5 +340,12 @@ arbres_se.final.shp<- st_transform(arbres_se.final.shp, EPSG = 4326)
 
 ## un gros json pour le moment dans l'avenir pe le diviser
 st_write(arbres_se.final.shp, dsn = "arbres_se.final.geojson")
+```
+
+## on vire les NULL du json
+
+```{r}
+test <- list.load("arbres_se.final.json")
+test_clean <- list.clean(test)
 ```
 
