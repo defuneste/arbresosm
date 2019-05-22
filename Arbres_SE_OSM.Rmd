@@ -335,8 +335,9 @@ head(arbres_se.final.shp)
 # Export 
 
 ```{r, message=FALSE, "sous fichiers pour facilier l'export"}
-## il faut dans ce cas transformer pour le bon CSR
-arbres_se.final.shp<- st_transform(arbres_se.final.shp, EPSG = 4326)
+## il faut dans ce cas transformer pour le bon CRS
+arbres_se.final.shp <- st_transform(arbres_se.final.shp, 4326)
+st_crs(arbres_se.final.shp)
 
 ## un gros json pour le moment dans l'avenir pe le diviser
 st_write(arbres_se.final.shp, dsn = "arbres_se.final.geojson")
@@ -347,5 +348,6 @@ st_write(arbres_se.final.shp, dsn = "arbres_se.final.geojson")
 ```{r}
 test <- list.load("arbres_se.final.json")
 test_clean <- list.clean(test)
+list.save(test_clean, "arbres_se.final.json")
 ```
 
