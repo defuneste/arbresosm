@@ -345,9 +345,11 @@ st_write(arbres_se.final.shp, dsn = "arbres_se.final.geojson")
 
 ## on vire les NULL du json
 
+Ici semble inutile
+
 ```{r}
-test <- list.load("arbres_se.final.json")
-test_clean <- list.clean(test)
-list.save(test_clean, "arbres_se.final.json")
+# test <- list.load("arbres_se.final.json")
+# test_clean <- list.clean(test)
+# list.save(test_clean, "arbres_se.final.json")
 ```
 
