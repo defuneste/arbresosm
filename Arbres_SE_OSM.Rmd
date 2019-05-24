@@ -102,13 +102,13 @@ arbres_se.shp <- arbres_se.shp %>%
 summary(arbres_se.shp)
 ```
 
-## pb lié à inconnu
+#### pb lié à inconnu
 
 ```{r}
 arbres_se.shp[arbres_se.shp$genus == "inconnu",]
 ```
 
-### Localisation d' inconnu
+#### Localisation d' inconnu
 
 ```{r}
 
