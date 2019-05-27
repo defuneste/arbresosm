@@ -94,39 +94,50 @@ sum(names_champs > 0) # retourne le nombre de champs renseignés
 # on garde les tags et les champs dans un seul df
 
 arbretemp <- nom_champs[,names_champs > 0] # on ne garde que les champs renseignés
+rm(nom_champs ) # on peut supprimer cette construction intermediaire pour gagner de la place
 
 # il faut convertir les infos dans hstore en un tableau
 # je me suis inspiré de cette réponse : 
 # https://dba.stackexchange.com/questions/94717/dynamically-convert-hstore-keys-into-columns-for-an-unknown-set-of-keys/123006
-# elle fonctionne en deux temps
-# en premier une requête qui va generer une requete avec chaque tag dans un SELECT
-# ex : h->'addr:city' AS "addr:city" mais autant de fois que j'ai de clefs
-# j'ai du utiliser $$ car j'avais des ' un peu partout 
-# la base est l' utilisation de format 
+# elle fonctionne en deux temps : en premier une requête qui va generer une requete et en second va l'executer
+# 
+#la base est l' utilisation de format 
 # https://www.postgresql.org/docs/current/static/functions-string.html#FUNCTIONS-STRING-FORMAT
+# qui produit une chaine de caractères qui correspond à ma futur requete
+#
+# Premier temps a plusieurs requêtes nichées la première produit un tableau qui garde osm_id et tags (la liste) :
+#       SELECT osm_id, tags->%s 
+#       FROM planet_osm_point
+#       WHERE planet_osm_point.natural = 'tree' ; #
+# puis pour chaque valeur unique / et ordre alphabetique (le FROM): 
+#       SELECT DISTINCT key
+#       FROM  planet_osm_point, skeys(tags) key
+#       WHERE planet_osm_point.natural = 'tree'
+#       ORDER  BY 1 
+# et on specifie le format via string_agg pour suivre ceci : 
+# h->'addr:city' AS "addr:city" mais autant de fois que j'ai de clefs
+# j'ai du utiliser $$ car j'avais des ' un peu partout 
+# 
 
-#query <- "
-#SELECT format($$SELECT osm_id, tags->%s 
-#	SELECT osm_id, tags AS tags 
-#	FROM planet_osm_point
-#	WHERE planet_osm_point.natural = 'tree') t;$$
-#	, string_agg(quote_literal(key) || ' AS ' || quote_ident(key), $$, tags->$$))
-#	AS sql   
-#FROM  (
-#   SELECT DISTINCT key
-#   FROM  planet_osm_point, skeys(tags) key
-#   WHERE planet_osm_point.natural = 'tree'
-#   ORDER  BY 1
-#   ) sub;"
+query <- "
+SELECT format($$ SELECT osm_id, tags->%s 
+	FROM planet_osm_point
+	WHERE planet_osm_point.natural = 'tree' ; $$
+	, string_agg(quote_literal(key) || ' AS ' || quote_ident(key), $$, tags->$$))
+	AS arbre_tag_sql   
+FROM  (
+   SELECT DISTINCT key
+   FROM  planet_osm_point, skeys(tags) key
+   WHERE planet_osm_point.natural = 'tree'
+   ORDER  BY 1 
+   ) sub;"
 
-# sql <- dbGetQuery(con, query)
-# Query <- cat(shQuote(sql), "\n")
-# cela ne marche pas, il faudra corriger
+# second temps executer la query
 
-# j'ai corrigé le code dans pgadmin et créer une table propre
-# que l'on va importer
+arbre_tag_sql <- dbGetQuery(con, query) # retoune la requête à lancer
+arbretemp_tags <- dbGetQuery(con, arbre_tag_sql[1,1]) # ici il faut prendre la première ligne/colonne
 
-arbretemp_tags <- dbGetQuery(con, "SELECT * FROM arbre;")
+
 dim(arbretemp_tags)
 names(arbretemp_tags)
 
