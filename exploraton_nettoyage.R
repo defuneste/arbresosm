@@ -136,6 +136,10 @@ FROM  (
 
 arbre_tag_sql <- dbGetQuery(con, query) # retoune la requête à lancer
 arbretemp_tags <- dbGetQuery(con, arbre_tag_sql[1,1]) # ici il faut prendre la première ligne/colonne
+<<<<<<< HEAD
+=======
+
+>>>>>>> 054c4201f7a761a6f86b797cce581cf0cbde9911
 
 dim(arbretemp_tags)
 names(arbretemp_tags)
