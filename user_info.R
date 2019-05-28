@@ -14,12 +14,15 @@ library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
 library(dplyr) # manip de données en tidyverse
 library(tibble)
 library(tidyr)
-library(lubridate)
+library(lubridate) # date
+library(stringr) # modif sur character
 
 ### visualisation
 library(ggplot2) # la visualisation
 library(tmap) # carto
 library(ggmap)# carto +
+library(leaflet) # carto web
+library(rsconnect) # pour partager une carte
 
 ## analyse spatiale / carto
 library(sp) # classes et methodes pour données spatiales pe déclassé par SF
@@ -27,12 +30,12 @@ library(rgdal) #gdal pour projection, crud et surtout export
 library(rgeos) # geos, penser à installer libgeos++-dev avant, travail avec objet sp
 library(sf) # nouveau package de classes et methodes spatiales doit "remplacer" rgdal et rgeos (et ofc sp) 
 library(units) # gestion des unités pour ha
-
+library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
 
 # il faut établir une connexion 
 
 pw <- {
-    "osm117" # oui c'est pas top de l'ecrire
+    chargelepwd # à charger avant
 }
 
 # charge les drivers pour postgre 
@@ -42,13 +45,10 @@ drv <- dbDriver("PostgreSQL")
 # fais un pont vers la db réutilisable
 # ici j'ai pris une db en local pour tester
 # con sera utilisé pour chaque connection et pkoi le franciser
-con <- dbConnect(drv, dbname = "osmgouv",
-                 host = "localhost", port = 5432, # attention 5432 par défaut
+con <- dbConnect(drv, dbname = "franceuser",
+                 host = "localhost", port = port, # attention 5432 par défaut
                  user = "postgres", password = pw) # idem pour user
 rm(pw) # mouais
-
-# vérifie pour une table 
-dbExistsTable(con, "planet_osm_point") 
 
 ######## travail sur osm_user et sur l'encodage des arbres
 

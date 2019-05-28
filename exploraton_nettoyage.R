@@ -32,7 +32,7 @@ library(sf) # nouveau package de classes et methodes spatiales doit "remplacer" 
 library(units) # gestion des unités pour ha
 library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
 
-# il faut établir une connexion 
+# il faut établir une connexion ==========
 
 pw <- {
   chargelepwd # à charger avant
@@ -62,7 +62,7 @@ query <- "SELECT COUNT(p.natural)
 df_arbres <- dbGetQuery(con, query)
 df_arbres
 
-
+# les clefs/valeur assosicés aux arbres ================
 # les differents tags : skey() renvoie la valeur de tous les attributs d'un hstore comme un set 
 # https://www.postgresql.org/docs/current/static/hstore.html
 
@@ -136,11 +136,8 @@ FROM  (
 
 arbre_tag_sql <- dbGetQuery(con, query) # retoune la requête à lancer
 arbretemp_tags <- dbGetQuery(con, arbre_tag_sql[1,1]) # ici il faut prendre la première ligne/colonne
-<<<<<<< HEAD
-=======
 
->>>>>>> 054c4201f7a761a6f86b797cce581cf0cbde9911
-
+# petite vérification
 dim(arbretemp_tags)
 names(arbretemp_tags)
 
@@ -150,8 +147,10 @@ dim(arbres_osm)
 names(arbres_osm) # le fichier est bien volumineux 
 
 names_champs <- arbres_osm %>% # une liste de champs 
-    summarise_all(funs(sum(!is.na(.)))) %>% 
-    t()  
+    # on prend tous (".") ce qui n'est pas NA (!is.na()) que l' on compte 
+    # et on en fait une fonction 
+    summarise_all(funs(sum(!is.na(.)))) %>%  
+    t()  # puis on le retranspose 
     
 dim(names_champs) # petite verif
 
@@ -162,12 +161,21 @@ barplot(sort(names_champs$V1, decreasing = T)) # un graphique rapide
 names_champs <- names_champs %>% 
     arrange(desc(V1)) # on range par ordre decroissant
 
+names_champs[c(1:9),]
+
+## on regarde un un peu plus les 9 champs toujours renseigné 
+
+head(arbres_osm$osm_changeset)
+
+## il est possible de vérifier les changeset ave ce format "https://www.openstreetmap.org/changeset/<Changeset number>"
+
 names_champs <- names_champs[-c(1:9),] # on retire les valeurs toujours présentes
 
 names_champs[1:30,] %>% # un graph des 30 champs les plus présents
     ggplot( aes(x = reorder(champs, V1), y = V1)) +
     geom_bar(stat = "identity") +
     coord_flip() +
+    labs(caption ="source : © les contributeurs d’OpenStreetMap") +
     ylab("Nombres d'arbres") +
     xlab("Champs")
 

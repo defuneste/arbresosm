@@ -57,15 +57,15 @@ rm(pw) # mouais
 
 # on prend les communes dans OSM c'est plus à jour que geofla
 commune_osm.shp  <- st_read(con,  query = "SELECT name,tags -> 'ref:INSEE' AS INSEE, way  
-FROM planet_osm_polygon
-WHERE boundary = 'administrative'  AND admin_level = '8';")
+                                            FROM planet_osm_polygon
+                                            WHERE boundary = 'administrative'  AND admin_level = '8';")
 summary(commune_osm.shp) # petits verifs
 st_crs(commune_osm.shp) # verification du CRS
 
 # on prend les regions dans OSM pour un fond
 france.shp <- st_read(con,  query = "SELECT name, way
-FROM planet_osm_polygon
-WHERE boundary = 'administrative'  AND admin_level = '4';")
+                                    FROM planet_osm_polygon
+                                    WHERE boundary = 'administrative'  AND admin_level = '4';")
 
 # un simplify, il faut js et la library mapshaper d'installer
 # sys = TRUE l'utilise
