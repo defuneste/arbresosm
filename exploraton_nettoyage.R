@@ -166,8 +166,10 @@ names_champs[c(1:9),]
 ## on regarde un un peu plus les 9 champs toujours renseigné 
 
 head(arbres_osm$osm_changeset)
+head(arbres_osm$tags)
 
 ## il est possible de vérifier les changeset ave ce format "https://www.openstreetmap.org/changeset/<Changeset number>"
+## il est possible de verifier les nodes avec ce format : https://www.openstreetmap.org/node/<numéro de node>
 
 names_champs <- names_champs[-c(1:9),] # on retire les valeurs toujours présentes
 

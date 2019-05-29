@@ -53,7 +53,8 @@ rm(pw) # mouais
 ######## travail sur osm_user et sur l'encodage des arbres
 
 # import des conributeurs et du moment de la contribution
-user.dat <- dbGetQuery(con,  "SELECT  tags -> 'osm_timestamp' AS ts, tags -> 'osm_user' AS nom
+user.dat <- dbGetQuery(con,  "SELECT  tags -> 'osm_timestamp' AS ts, tags -> 'osm_user' AS nom, tags -> 'osm_changeset' AS changeset,
+                       osm_id AS ID, tags -> 'osm_uid' AS user_id, tags -> 'osm_version' AS version
                        FROM planet_osm_point
                        WHERE planet_osm_point.natural = 'tree';")
 
@@ -68,6 +69,10 @@ ggplot(user.dat, aes(x = ts)) +
     geom_histogram(binwidth = 15) +
     xlab("Années") +
     ylab("Nb. arbres isolés")
+
+# une verif pour s'assurer que osm_uid correspond bien à l'id de l'user
+user.dat %>% 
+    filter(nom == "defuneste")
 
 # liste des utilisteurs avec le nombre d'arbres
 liste_user.dat <- user.dat %>% 
