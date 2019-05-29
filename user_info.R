@@ -53,22 +53,45 @@ rm(pw) # mouais
 ######## travail sur osm_user et sur l'encodage des arbres
 
 # import des conributeurs et du moment de la contribution
-user.dat <- dbGetQuery(con,  "SELECT  tags -> 'osm_timestamp' AS ts, tags -> 'osm_user' AS nom, tags -> 'osm_changeset' AS changeset,
+user.shp <- dbGetQuery(con,  "SELECT  tags -> 'osm_timestamp' AS ts, tags -> 'osm_user' AS nom, tags -> 'osm_changeset' AS changeset,
                        osm_id AS ID, tags -> 'osm_uid' AS user_id, tags -> 'osm_version' AS version
                        FROM planet_osm_point
                        WHERE planet_osm_point.natural = 'tree';")
+#verif de routine
+dim(user.shp)
+str(user.shp)
 
-dim(user.dat)
-str(user.dat)
-
-user.dat$ts <- as_date(user.dat$ts) # on passe en POSIX juste date
-head(user.dat)
+# # on prend les communes dans OSM c'est plus à jour que geofla
+# commune_osm.shp  <- st_read(con,  query = "SELECT name,tags -> 'ref:INSEE' AS INSEE, way  
+#                                             FROM planet_osm_polygon
+#                                             WHERE boundary = 'administrative'  AND admin_level = '8';")
+# summary(commune_osm.shp) # petits verifs
+# st_crs(commune_osm.shp) # verification du CRS
+# 
+# # on utilise mapshaper il faut js mapshaper d'installer surtout ici avec sys= T 
+# commune_simplify.shp <- ms_simplify(commune_osm.shp, sys = TRUE) 
+# 
+# commune_type.shp <- commune_simplify.shp %>% 
+#     filter(!is.na(insee))
+# 
+# france.shp <- commune_type.shp %>%
+#     st_union() # un gros merge sur l'ensemble
+# st_crs(france.shp) # verif du CRS
+# 
+# user_france.shp <- species.shp[france.shp,] # je coupe avec la france
+# 
+# user.dat <- user_france.shp %>%
+#     st_set_geometry(value = NULL) %>% #drop de la geometrie
+# 
+# user.dat$ts <- as_date(user.dat$ts) # on passe en POSIX juste date
+# head(user.dat)
 
 # j'ai pris la 15aine mais on est presque de l'ordre du jour
 ggplot(user.dat, aes(x = ts)) +
     geom_histogram(binwidth = 15) +
     xlab("Années") +
-    ylab("Nb. arbres isolés")
+    ylab("Nb. arbres isolés") +
+    labs(caption ="source : © les contributeurs d’OpenStreetMap")
 
 # une verif pour s'assurer que osm_uid correspond bien à l'id de l'user
 user.dat %>% 
@@ -82,6 +105,8 @@ liste_user.dat <- user.dat %>%
               duree = max(ts) - min(ts)) %>% 
     arrange(desc(nb_arbre)) 
 
+#  nombre d'utilsateurs contribuant aux arbres
+dim(liste_user.dat)
 
 ## comptage du nombre de jour ou un arbre à été ajouté modifié
 

@@ -135,7 +135,8 @@ st_crs(france.shp) # verif du CRS
 
 str(species.shp) # on regarde combien on a d'arbres
 
-species_france.shp <- species.shp[france.shp,] # on coupe pour la france
+# # on coupe pour la france =============================
+species_france.shp <- species.shp[france.shp,] 
 str(species_france.shp) # on perd pas mal d'arbres, geneve ? 
 
 # jointure des types de communes à la table des arbres
