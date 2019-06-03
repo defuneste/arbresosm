@@ -353,3 +353,46 @@ Ici semble inutile
 # list.save(test_clean, "arbres_se.final.json")
 ```
 
+# zone pour l'experimentation 
+
+Ici On va ne garder qu'une partie des données pour l'experimenation d'albiziapp
+
+```{r}
+zone.shp <- st_read("data/zone_se.shp") # ouverture du fichier de zone 
+summary(zone.shp)
+```
+
+On ne garde que ce qui dans zone. 
+
+```{r}
+arbres_xp <- arbres_se.final.shp[zone.shp,] # un clip sur la zone
+plot(st_geometry(arbres_xp )) # un plot pour verifier (on passe par le geom car on veut juste verifier les points pas toutes les variables)
+
+```
+
+## des stats
+
+```{r}
+arbres_xp %>% 
+    group_by(genus) %>% 
+    summarize(comptage = n()) %>%
+    arrange(desc(comptage)) %>%
+       ggplot(aes(y= comptage, x = reorder(genus, comptage))) +
+    geom_bar(stat = "identity") + 
+    labs(x="Genre",
+         ylab="Nombre d'arbres") +
+    coord_flip() 
+```
+
+
+## une carte
+
+```{r}
+se_xp_map <- tm_shape(arbres_xp) # on fait un objet tmap
+# on y ajoute ce que le l'on veut
+se_xp_map + tm_dots("genus") 
+```
+
+
+
+
