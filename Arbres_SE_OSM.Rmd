@@ -342,7 +342,7 @@ arbres_se.final.shp <- st_transform(arbres_se.final.shp, 4326)
 st_crs(arbres_se.final.shp)
 
 ## un gros json pour le moment dans l'avenir pe le diviser
-st_write(arbres_se.final.shp, dsn = "arbres_se.final.geojson")
+st_write(arbres_se.final.shp, dsn = "arbres_se_final.geojson")
 ```
 
 ## on vire les NULL du json
@@ -369,7 +369,9 @@ On ne garde que ce qui dans zone.
 
 ```{r}
 arbres_xp <- arbres_se.final.shp[zone.shp,] # un clip sur la zone
+st_write(arbres_se.final.shp, dsn = "arbres_se_xp.geojson")
 summary(arbres_xp)
+
 plot(st_geometry(arbres_xp )) # un plot pour verifier (on passe par le geom car on veut juste verifier les points pas toutes les variables)
 
 ```
