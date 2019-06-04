@@ -33,7 +33,9 @@ library(rgdal) #gdal pour projection, crud et surtout export
 library(rgeos) # geos, penser à installer libgeos++-dev avant, travail avec objet sp
 library(sf) # nouveau package de classes et methodes spatiales doit "remplacer" rgdal et rgeos (et ofc sp) 
 library(units) # gestion des unités pour ha
+library(spatstat) # point patern anlysis
 library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
+library(maptools) # des outils principalements de conversion
 ```
 
 # Lecture des données 
@@ -342,7 +344,7 @@ arbres_se.final.shp <- st_transform(arbres_se.final.shp, 4326)
 st_crs(arbres_se.final.shp)
 
 ## un gros json pour le moment dans l'avenir pe le diviser
-st_write(arbres_se.final.shp, dsn = "arbres_se_final.geojson")
+st_write(arbres_se.final.shp, dsn = "data/arbres_se_final.geojson")
 ```
 
 ## on vire les NULL du json
@@ -379,7 +381,7 @@ arbres_xp_reduit <- arbres_se.final.shp[zone.shp[1,],] # un clip sur la zone ré
 summary(arbres_xp)
 summary(arbres_xp_reduit)
 
-st_write(arbres_xp, dsn = "arbres_se_xp.geojson")
+st_write(arbres_xp, dsn = "data/arbres_se_xp.geojson")
 
 
 plot(st_geometry(arbres_xp )) # un plot pour verifier (on passe par le geom car on veut juste verifier les points pas toutes les variables)
@@ -470,6 +472,30 @@ arbres_xp %>%
  
 ```
 
+## des stats de distance et NN
+
+```{r}
+## ici on passe en sp avec sf
+xp_sp <- as(st_transform(arbres_xp, 2154), "Spatial")
+## ici on passe en ppp avec maptools
+xp_ppp <- as(xp_sp, "ppp") 
+
+## on verifie 
+class(xp_ppp)
+str(xp_ppp)
+
+## on plot
+plot(xp_ppp$x, xp_ppp$y)
+arbre_plus_proche <- nndist(xp_ppp)
+class(arbre_plus_proche )
+length(arbre_plus_proche )
+head(arbre_plus_proche )
+
+arbres_xp$dist <- nndist(xp_ppp)
+
+
+hist(arbres_xp$dist)
+```
 
 
 
