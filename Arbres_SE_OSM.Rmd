@@ -388,33 +388,6 @@ plot(st_geometry(zone.shp[1,]))
 
 ```
 
-## des stats
-
-On regarde la répartition des genres 
-
-```{r}
-arbres_xp %>% 
-    group_by(genus) %>% 
-    summarize(comptage = n()) %>%
-    arrange(desc(comptage)) %>%
-       ggplot(aes(y= comptage, x = reorder(genus, comptage))) +
-    geom_bar(stat = "identity") + 
-    labs(x="Genre",
-         ylab="Nombre d'arbres") +
-    coord_flip() 
-```
-
-```{r}
-
-       ggplot(aes(y= comptage, x = reorder(genus, comptage))) +
-    geom_bar(stat = "identity") + 
-    labs(x="Genre",
-         ylab="Nombre d'arbres") +
-    coord_flip()
-```
-
-
-
 ## une carte
 
 ```{r}
@@ -429,6 +402,76 @@ ggmap(se_stan) +
     xlab("") + ylab("")
 
 ```
+
+## des stats
+
+```{r}
+comptage_xp <-  arbres_xp %>% # pour l'ensemble
+    st_set_geometry(value = NULL) %>% # on drop la geometrie
+    group_by(genus) %>% # groupe par genus ou species
+    summarize(comptage = n()) %>% # on compte
+    arrange(desc(comptage)) # on range juste pour la lisibilité
+
+comptage_xp_reduit <- arbres_xp_reduit %>% # pour le sous ensemble
+    st_set_geometry(value = NULL) %>% # on drop la geometrie
+    group_by(genus) %>%  # groupe par genus ou species
+    summarize(comptage = n()) %>% # on compte
+    arrange(desc(comptage)) # on range juste pour la lisibilité
+    
+```
+
+
+On a un peu trop de genre pour que cela soit lisible sur un graph/carte en dessous de 10 individus species va devenir "autre". Je sais pas encore si je vais le garder. 
+
+```{r}
+comptage_xp %>% 
+    # ici on reprend le fichier de comptage et on va attraibuer Autres si on est inf à 10
+    # puis on regroupe et recompte
+    mutate(espece = if_else(comptage_xp$comptage >= 10, comptage_xp$genus, "Autres")) %>% 
+    group_by(espece) %>% 
+    summarize(comptage = sum(comptage)) %>% 
+    arrange(desc(comptage))
+
+```
+
+
+
+On regarde la répartition des genres. On va attribuer une zone aux arbres ce qui est sans doute l'option la plus simple (et avec laquelle j'aurais du commencer)
+
+
+```{r}
+arbres_xp <- st_join(arbres_xp, zone.shp) # une jointure spatiale, ici on prend tous le fichier comme il est presque vide
+table(arbres_xp$id) # une verif
+
+# un rableau temporaire qui compte l'occurence par genre
+temp_order <- arbres_xp %>%  
+    st_set_geometry(value = NULL) %>% 
+    group_by(genus) %>% 
+    tally()
+
+# on le reinjecte dans arbres_xp pour ordonner le futur graph par le nombre d'occurence
+arbres_xp <- left_join (arbres_xp, temp_order, by =c ("genus" = "genus" ))
+```
+
+
+
+```{r}
+arbres_xp %>% 
+    st_set_geometry(value = NULL) %>% # on drop la geométrie
+    ggplot(aes(x= reorder(genus, n),  fill = as.factor(id))) + # ici on reoder avec n et on met id n factor pour le remplissage
+    geom_bar() + 
+    labs(x="Genre",
+         ylab="Nombre d'arbres") +
+    coord_flip() + 
+    scale_fill_manual(values = c("#90D18D", "#8BBFDD"),  # des couleurs moins piquantes
+                                     name = "Zonage", labels = c("Elargi", "Reduit")) + # la legende
+    theme(axis.text=element_text(size=8)) # on diminue la taille des labels
+
+ 
+```
+
+
+
 
 
 
