@@ -361,18 +361,30 @@ Ici On va ne garder qu'une partie des données pour l'experimentation d'albiziap
 
 ```{r}
 zone.shp <- st_read("data/zone_se.shp") # ouverture du fichier de zone 
+st_crs(zone.shp)
 summary(zone.shp)
 sum(st_area(zone.shp))/10000 # surface de la zone ici en ha car je suis en m2 en 4326
+sum(st_area(zone.shp[1,]))/10000 # surface de la zone reduite ici 
+
 ```
 
 On ne garde que ce qui dans zone. 
 
 ```{r}
-arbres_xp <- arbres_se.final.shp[zone.shp,] # un clip sur la zone
-st_write(arbres_se.final.shp, dsn = "arbres_se_xp.geojson")
+# attention ici on est en lat/long et st_intersetcs fait comme si on était projeté
+# dans notre cas c'est pas grave car on est sur une petite surface mais du coup si on utilise un 
+# st_intersect c'est apparament mieux d'être en projeté
+arbres_xp <- arbres_se.final.shp[zone.shp,] # un clip sur la zone totale
+arbres_xp_reduit <- arbres_se.final.shp[zone.shp[1,],] # un clip sur la zone réduite
 summary(arbres_xp)
+summary(arbres_xp_reduit)
+
+st_write(arbres_xp, dsn = "arbres_se_xp.geojson")
+
 
 plot(st_geometry(arbres_xp )) # un plot pour verifier (on passe par le geom car on veut juste verifier les points pas toutes les variables)
+plot(st_geometry(zone.shp))
+plot(st_geometry(zone.shp[1,]))
 
 ```
 
@@ -413,7 +425,8 @@ st_crs(arbres_xp)
 # on va chez stamen, on prends toner-lite, préciser le zoom aide pour le dl des tuiles
 se_stan <-  get_map(bb(arbres_xp, output = "matrix"), source = "stamen",  maptype = "toner-lite", zoom = 16) 
 ggmap(se_stan) +
-    geom_sf(data = arbres_xp, inherit.aes = FALSE, pch = 16, alpha = 0.5, col = "green", size = 0.5) 
+    geom_sf(data = arbres_xp, inherit.aes = FALSE, pch = 16, alpha = 0.7, col = "green", size = 0.5) +
+    xlab("") + ylab("")
 
 ```
 
