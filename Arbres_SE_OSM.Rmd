@@ -403,6 +403,12 @@ ggmap(se_stan) +
     geom_sf(data = arbres_xp, inherit.aes = FALSE, pch = 16, alpha = 0.7, col = "green", size = 0.5) +
     xlab("") + ylab("")
 
+carto_se <- leaflet() %>%
+    addTiles() %>%
+    addCircleMarkers(data = arbres_xp, radius = 2) 
+
+carto_se
+
 ```
 
 ## des stats
