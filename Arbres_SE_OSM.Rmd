@@ -344,7 +344,7 @@ arbres_se.final.shp <- st_transform(arbres_se.final.shp, 4326)
 st_crs(arbres_se.final.shp)
 
 ## un gros json pour le moment dans l'avenir pe le diviser
-st_write(arbres_se.final.shp, dsn = "data/arbres_se_final.geojson")
+# st_write(arbres_se.final.shp, dsn = "data/arbres_se_final.geojson")
 ```
 
 ## on vire les NULL du json
@@ -381,7 +381,7 @@ arbres_xp_reduit <- arbres_se.final.shp[zone.shp[1,],] # un clip sur la zone ré
 summary(arbres_xp)
 summary(arbres_xp_reduit)
 
-st_write(arbres_xp, dsn = "data/arbres_se_xp.geojson")
+#st_write(arbres_xp, dsn = "data/arbres_se_xp.geojson")
 
 
 plot(st_geometry(arbres_xp )) # un plot pour verifier (on passe par le geom car on veut juste verifier les points pas toutes les variables)
@@ -492,19 +492,66 @@ str(xp_ppp)
 
 ## on plot
 plot(xp_ppp$x, xp_ppp$y)
+# ici juste dans un veteur
+# nndist vient de spatstat 
 arbre_plus_proche <- nndist(xp_ppp)
 class(arbre_plus_proche )
 length(arbre_plus_proche )
 head(arbre_plus_proche )
 
+## on sauve comme une nouvelle variable
 arbres_xp$dist <- nndist(xp_ppp)
 
+# un graph
+arbres_xp %>% 
+ggplot(aes(dist, colour = as.factor(id))) + # il faut un facteur pour utiliser colours
+    geom_freqpoly(binwidth = 1) + # freqpoly avec un binwidth de 1 m 
+    scale_colour_manual(values = (c("#90D18D", "#8BBFDD")),  # des couleurs moins piquantes
+                                     name = "Zonage", labels = c("Elargi", "Reduit")) + # la legende
+    xlab("distance (m)") +
+    ylab("Nombres d'arbres")
 
-hist(arbres_xp$dist)
 ```
 
 
+#### La distance à un arbre de meme genre
+
+```{r}
+
+arbres_xp_dist <- arbres_xp
+arbres_xp_dist$ndistidem <- NA
+
+## attention il faut plus de deux arbres sinon nndist va retourner un vecteur de taille 0 alors que 1 est le minimum pour l'indexation
+dist_same_tree <- function(nom_genre, arbres_sf) {
+# on filtre sur un genre
+arbres_xp_filter <- filter(arbres_sf, genus == nom_genre) %>% 
+    select('ref:FR:Saint-Etienne:tree', geometry)
+# on converti ce sf en ppp filtrer, on passe aussi en lambert
+arbres_xp_filter.ppp <- as(as(st_transform(arbres_xp_filter, 2154), "Spatial"), "ppp")
+# on passe nndist dans le tible filtré
+arbres_sf$ndistidem[arbres_sf$genus == nom_genre] <- nndist(arbres_xp_filter.ppp)
+return(arbres_sf)
+}
+
+nom_genre <- c("Platanus", "Prunus", "Acer", "Pinus", "Tilia", "Sorbus", "Quercus", "Cedrus", "Alnus", "Populus") 
 
 
 
+for(i in 1:length(nom_genre)){
+    arbres_xp_dist <- dist_same_tree(nom_genre[i], arbres_xp_dist)
+    print(nom_genre[i])} 
+
+# arbres_xp_dist <- dist_same_tree(nom_genre, arbres_xp_dist)
+```
+
+```{r}
+arbres_xp_dist %>% 
+    filter(!is.na(ndistidem)) %>% 
+ggplot(aes(ndistidem, fill = genus)) + # il faut un facteur pour utiliser colours
+    geom_histogram(binwidth = 1) + # freqpoly avec un binwidth de 1 m 
+    scale_x_continuous(limits = c(0,30)) +
+    facet_wrap(~genus, ncol = 2) +
+    xlab("distance (m)") +
+    ylab("Nombres d'arbres")
+```
 
