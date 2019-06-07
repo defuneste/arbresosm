@@ -33,6 +33,30 @@ summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 2
     </item>
     
     <item>
+      <title>Hello R Markdown</title>
+      <link>/arbresosm/2015/07/23/hello-r-markdown/</link>
+      <pubDate>Thu, 23 Jul 2015 21:13:14 -0500</pubDate>
+      
+      <guid>/arbresosm/2015/07/23/hello-r-markdown/</guid>
+      <description> R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
+You can embed an R code chunk like this:
+## knitr  Including Plots You can also embed plots. See Figure \@ref(fig:pie) for example:
+## knitr  </description>
+    </item>
+    
+    <item>
+      <title>Hello R Markdown</title>
+      <link>/arbresosm/2015/07/23/hello-r-markdown/</link>
+      <pubDate>Thu, 23 Jul 2015 21:13:14 -0500</pubDate>
+      
+      <guid>/arbresosm/2015/07/23/hello-r-markdown/</guid>
+      <description> R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
+You can embed an R code chunk like this:
+## knitr  Including Plots You can also embed plots. See Figure \@ref(fig:pie) for example:
+## knitr  </description>
+    </item>
+    
+    <item>
       <title>Lorem Ipsum</title>
       <link>/arbresosm/2015/01/01/lorem-ipsum/</link>
       <pubDate>Thu, 01 Jan 2015 13:09:13 -0600</pubDate>
