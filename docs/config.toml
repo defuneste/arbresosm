@@ -1,4 +1,4 @@
-baseurl = "/"
+baseURL = "https://defuneste.github.io/arbresosm/"
 languageCode = "en-us"
 title = "A Hugo website"
 theme = "hugo-lithium"
