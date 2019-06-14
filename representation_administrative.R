@@ -237,17 +237,17 @@ legende <- c("]0-0,2]", "]0,2-1]", "]1-10]", "]10-100]", "]100-500]", "]500-1000
 
 # une carte soit des arbres avec ou sans info
 france_commune_map +
-    tm_fill(col = "class_densité_info", palette = "Oranges", n = 8, contrast = c(0, 1), # remplie les polygones avec greens 
+    tm_fill(col = "class_densité", palette = "Greens", n = 8, contrast = c(0, 1), # remplie les polygones avec greens 
                                                                                   # ici on peut prendre class_densité et 
                                                                                   # class_densité_info
-            title = "Arbres isolés par km²", labels = legende,                        # titre de la legende, label prend legend
-            textNA = "Aucune donnée",                                             # le label des NA
+            title = "Isolated trees per km²", labels = legende,                        # titre de la legende, label prend legend
+            textNA = "No value",                                             # le label des NA
             colorNA = "white") +                                                  # les Na en blanc
     tm_shape(france_simplify.shp) +                                               # rajout d'un shape pour les regions
     tm_borders(col = "grey") +                                                    # juste les bordures en gris
-    tm_credits("Source : © les contributeurs d’OpenStreetMap", size = 0.5, position=c("left", "top")) + # sources
+    tm_credits("© OpenStreetMap contributors", size = 0.5, position=c("left", "top")) + # sources
     tm_scale_bar(position = c( "center", "BOTTOM")) +                             # legende ici juste sa position
-    tm_legend(title = "Arbres isolés renseignés (genre ou espèce)/km² par commune")                            # titre
+    tm_legend(title = "Isolated trees per km² in France's municipalities")                            # titre
 
 # une carte avec le taux
 

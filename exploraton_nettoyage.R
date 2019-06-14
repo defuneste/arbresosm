@@ -367,11 +367,11 @@ arbres_osm$osm_timestamp <- as.Date(arbres_osm$osm_timestamp) # en date attentio
 
 ggplot(arbres_osm, aes(x = osm_timestamp, fill = as.factor(refbd))) +
     geom_histogram(binwidth = 15) +
-    xlab("Years") +
+    xlab("Year") +
     ylab("Isolated trees") +
     labs(caption ="© OpenStreetMap contributors") + 
-    guides(fill=guide_legend(title="Ref. from DB import")) +
-    scale_fill_manual(labels = c("No", "Yes"), values = c("#1b9e77", "#7570b3"))
+    guides(fill=guide_legend(title="Ref. from DB import:")) +
+    scale_fill_manual(labels = c("- not indicated", "- indicated"), values = c("#1b9e77", "#7570b3"))
 
 arbres_osm$info <- 0 # un nouveau champ
 arbres_osm$info[!is.na(arbres_osm$genus)] <- 1 # il prend 1 quamd j'ai une info sur genus
@@ -380,11 +380,11 @@ arbres_osm$info[!is.na(arbres_osm$species)] <- 1 # il prend 1 quamd j'ai une inf
 
 ggplot(arbres_osm, aes(x = osm_timestamp, fill = as.factor(info))) +
     geom_histogram(binwidth = 15) +
-    xlab("Years") +
+    xlab("Year") +
     ylab("Isolated trees") +
     labs(caption ="© OpenStreetMap contributors") +
-    guides(fill=guide_legend(title="Botanics informations")) +
-    scale_fill_manual(labels = c("No", "Yes"), values = c("#d95f02", "#7570b3"))
+    guides(fill=guide_legend(title="Botanic information:")) +
+    scale_fill_manual(labels = c("- not indicated", "- indicated"), values = c("#d95f02", "#7570b3"))
 
 
 
