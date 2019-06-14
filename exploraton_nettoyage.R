@@ -336,6 +336,58 @@ hist(as.numeric(arbres_osm$height)[!is.na(as.numeric(arbres_osm$height))], break
 unique(arbres_osm$start_date)
 unique(arbres_osm$`start_date:FR:plantation`)
 
+
+#### user pour espoo
+
+# un grep pour avoir les noms de variables qui commence par ref
+import_bd <- names(arbres_osm)[grep(pattern = "^ref", names(arbres_osm))]
+
+# ref est etrange et doit être un peu osculté, il semble cependant bien que ce soit une ref d'une base
+
+pas_na <- function(x) {sum(!is.na(x))} # une fonction qui somme les T/F sur des pas Na
+
+# ici je compte les nom Na pour les refs
+lapply(arbres_osm[names(arbres_osm)[grep(pattern = "^ref", names(arbres_osm))]], pas_na)
+
+arbres_osm$refbd <- apply(arbres_osm[,import_bd], 1, pas_na)
+
+table(arbres_osm$refbd)  # j'ai des cheffauchement au max 3 et souvent 2 sur Paris
+
+# ici je prefére du 0/1 mais c'est discutable
+arbres_osm$refbd[arbres_osm$refbd >= 1] <- 1
+
+# une petite verif visuelle : il y a pb des erreurs avec "ref"
+# arbres_osm %>% 
+#     filter(refbd == 1) %>% 
+#     select(import_bd, refbd) %>% 
+#     view()
+
+# on passe dans un format dates
+arbres_osm$osm_timestamp <- as.Date(arbres_osm$osm_timestamp) # en date attention on perd l'heure/minutes
+
+ggplot(arbres_osm, aes(x = osm_timestamp, fill = as.factor(refbd))) +
+    geom_histogram(binwidth = 15) +
+    xlab("Years") +
+    ylab("Isolated trees") +
+    labs(caption ="© OpenStreetMap contributors") + 
+    guides(fill=guide_legend(title="Ref. from DB import")) +
+    scale_fill_manual(labels = c("No", "Yes"), values = c("#1b9e77", "#7570b3"))
+
+arbres_osm$info <- 0 # un nouveau champ
+arbres_osm$info[!is.na(arbres_osm$genus)] <- 1 # il prend 1 quamd j'ai une info sur genus
+arbres_osm$info[!is.na(arbres_osm$species)] <- 1 # il prend 1 quamd j'ai une info sur species
+
+
+ggplot(arbres_osm, aes(x = osm_timestamp, fill = as.factor(info))) +
+    geom_histogram(binwidth = 15) +
+    xlab("Years") +
+    ylab("Isolated trees") +
+    labs(caption ="© OpenStreetMap contributors") +
+    guides(fill=guide_legend(title="Botanics informations")) +
+    scale_fill_manual(labels = c("No", "Yes"), values = c("#d95f02", "#7570b3"))
+
+
+
 # se deconnecter de la base
 
 dbDisconnect(con)
