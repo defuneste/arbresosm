@@ -15,6 +15,7 @@ library(sp)
 library(sf)
 library(dplyr)
 library(ggplot2)
+library(stringr)
 ```
 
 # Analyse exploratoire
@@ -224,7 +225,7 @@ levels(arbres_lyon_final.shp$genus)[levels(arbres_lyon_final.shp$genus) == "Evod
 #### rajout de Leaf_type et Leaf_cycle
 
 ```{r}
-leaf <- read.csv2("leaft_type.csv", sep = "\t", stringsAsFactors = FALSE)
+leaf <- read.csv2("data/leaft_type.csv", sep = "\t", stringsAsFactors = FALSE)
 leaf[leaf$leaf_cycle == "evergreen and deciduous",] <- "deciduous and evergreen"
 head(leaf)
 ```
@@ -239,7 +240,7 @@ sort(unique(arbres_lyon_final.shp$genus)[!(unique(arbres_lyon_final.shp$genus) %
 ```
 
 ```{r, "ajout des genres manquants"}
-leaf2 <- read.csv2("leaf_type_ajout.csv", sep = "\t", stringsAsFactors = FALSE) # ouverture du fichier complementaire
+leaf2 <- read.csv2("data/leaf_type_ajout.csv", sep = "\t", stringsAsFactors = FALSE) # ouverture du fichier complementaire
 summary(leaf2)
 summary(leaf2)
 leaf2 <- leaf2 %>% 
