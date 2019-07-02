@@ -73,9 +73,10 @@ str(newObservation, max.level = 2)
 bob <- newObservation[,5:6]
 
 
+
 #### c'est assez hideux mais je fais vite
 
-for(i in 1:length(newObservation)) {
+for(i in 1:length(newObservation$event)) {
     bob$point[i] <- st_sfc(st_point(newObservation$object[[i]]$location$coordinates))}
 
 bob <- st_sf(bob, geom = bob$point) # la bonne colone pour le champs geom
@@ -86,7 +87,9 @@ class(bob)
 
 carto_SE <- leaflet() %>%
     addTiles() %>%
-    addCircleMarkers(data = bob[bob$username == "tjoliveau",], radius = 2, 
+    addCircleMarkers(data = bob[bob$username == "Kasia Ozga",], radius = 2, 
                      color = "red") 
 
 carto_SE
+
+bob$geom
