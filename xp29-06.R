@@ -6,7 +6,9 @@ library(jsonlite) # pour les json
 library(tidyverse) # envt pour des donnees de type tidy pas trop volumineuse
 library(sf) # package spatial
 library(purrr) # functional prog
+library(lubridate)
 library(tmap)
+library(tmaptools)
 library(leaflet)
 
 ### stream du json
@@ -70,26 +72,45 @@ newObservation <- exp_brut[exp_brut$event == "newObservation",]
 dim(newObservation)
 str(newObservation, max.level = 2)
 
-bob <- newObservation[,5:6]
+newObservation.df <- newObservation[,5:6]
 
 
 
 #### c'est assez hideux mais je fais vite
 
+newObservation$point <- NULL
+
 for(i in 1:length(newObservation$event)) {
-    bob$point[i] <- st_sfc(st_point(newObservation$object[[i]]$location$coordinates))}
+    newObservation.df$point[i] <- st_sfc(st_point(newObservation$object[[i]]$location$coordinates))}
 
-bob <- st_sf(bob, geom = bob$point) # la bonne colone pour le champs geom
-bob <- bob[,-3]
+newObservation.df <- st_sf(newObservation.df, geom = newObservation.df$point) # la bonne colone pour le champs geom
+newObservation.df <- newObservation.df[,-3]
 
-class(bob)
+class(newObservation)
 
+
+## 1 - Une carte des nouvelle obs  =======
+
+pal <- colorFactor(palette =c(get_brewer_pal("Set2", n = 7)),
+                   levels = c("Catherine JHG", "JitenshaNiko", "Kasia Ozga", "MathDu", "pofx", "tjoliveau",  "Yoann Duriaux"),
+                   na.color = "black")
 
 carto_SE <- leaflet() %>%
     addTiles() %>%
-    addCircleMarkers(data = bob[bob$username == "Kasia Ozga",], radius = 2, 
-                     color = "red") 
+    addCircleMarkers(data = newObservation.df, radius = 2, opacity = 0.7,
+                     color = ~pal(username)) %>% 
+addLegend(position = "bottomright",
+          pal = pal,
+          values = c("Catherine JHG", "JitenshaNiko", "Kasia Ozga", "MathDu", "pofx", "tjoliveau",  "Yoann Duriaux"),
+          na.label = "abs d'info")
 
 carto_SE
 
-bob$geom
+## 2 - Temporalité ==============
+
+# on met la bonne tz 
+attr(newObservation.df$date, "tzone") <- "Europe/Paris"
+
+plot(newObservation.df$date)
+
+strftime(newObservation.df$date, format="%H:%M:%S")
