@@ -28,7 +28,7 @@ class(exp_brut)
 # . -------------------------------------------------------------------------- =============
 
 # je met de coté "event" Pierre-Yves et Ludovic doivent être plus apte pour travailler avec ce type d' info
-# mais je vauis pe l'utiliser pour filtrer 
+# mais je vais pe l'utiliser pour filtrer 
 table(exp_brut$event, exp_brut$activity$index)
 
 sum(table(exp_brut$event, exp_brut$activity$index)) 
@@ -68,13 +68,19 @@ table(exp_brut$event, exp_brut$activity$index)
 # . -------------------------------------------------------------------------- =============
 # II - Je ne prends que "newObservation" ----------------------------------------------------------------- =============
 # . -------------------------------------------------------------------------- =============
+
+# on recode activité
+exp_brut$code_activ <- exp_brut$activity$index 
+exp_brut$code_activ <- exp_brut$code_activ+1
+
 newObservation <- exp_brut[exp_brut$event == "newObservation",]
 dim(newObservation)
 str(newObservation, max.level = 2)
 
-newObservation.df <- newObservation[,5:6]
+newObservation.df <- newObservation[,c(5:6,9)] ## attention ici j'ai fait des selections par num de colonnes
 
-
+# on met la bonne tz 
+attr(newObservation.df$date, "tzone") <- "Europe/Paris"
 
 #### c'est assez hideux mais je fais vite
 
@@ -84,9 +90,16 @@ for(i in 1:length(newObservation$event)) {
     newObservation.df$point[i] <- st_sfc(st_point(newObservation$object[[i]]$location$coordinates))}
 
 newObservation.df <- st_sf(newObservation.df, geom = newObservation.df$point) # la bonne colone pour le champs geom
-newObservation.df <- newObservation.df[,-3]
+newObservation.df <- newObservation.df[,-4] ## attention ici j'ai fait des selections par num de colonnes
 
-class(newObservation)
+### ici c'est une solution R : on applique la fonction '[' (qui indexe la list), en fonction d'un vecteur de nom 
+# le t() est juste pour un transpose
+# as.data.frame est pour en faire un df
+
+df_bota <- as.data.frame(t(sapply(newObservation[["object"]], `[`, c("authorName","common" , "specie", "genus"))))
+names(df_bota) <- c("authorName", "common", "specie", "genus")
+
+newObservation.df <- bind_cols(newObservation.df, df_bota) %>% select(-"authorName")
 
 
 ## 1 - Une carte des nouvelle obs  =======
@@ -108,9 +121,16 @@ carto_SE
 
 ## 2 - Temporalité ==============
 
-# on met la bonne tz 
-attr(newObservation.df$date, "tzone") <- "Europe/Paris"
-
 plot(newObservation.df$date)
 
 strftime(newObservation.df$date, format="%H:%M:%S")
+
+## 3 - Activité/personne ================
+
+table(newObservation.df$username, newObservation.df$code_activ)
+
+newObservation.df %>% 
+ggplot(aes(x = code_activ, fill = username)) +
+    geom_bar(position = "dodge") +
+    labs(x ="Activités",
+         y ="Nombre de relevés") 
