@@ -10,6 +10,8 @@ library(lubridate)
 library(tmap)
 library(tmaptools)
 library(leaflet)
+library(ggmap)
+
 
 ### stream du json
 exp_brut <- stream_in(file("data/tracesBrutesStEtienne29_06_19.json"))
@@ -92,6 +94,8 @@ for(i in 1:length(newObservation$event)) {
 newObservation.df <- st_sf(newObservation.df, geom = newObservation.df$point) # la bonne colone pour le champs geom
 newObservation.df <- newObservation.df[,-4] ## attention ici j'ai fait des selections par num de colonnes
 
+st_crs(newObservation.df) = 4326 # le bon scr
+
 ### ici c'est une solution R : on applique la fonction '[' (qui indexe la list), en fonction d'un vecteur de nom 
 # le t() est juste pour un transpose
 # as.data.frame est pour en faire un df
@@ -110,7 +114,7 @@ pal <- colorFactor(palette =c(get_brewer_pal("Set2", n = 7)),
 
 carto_SE <- leaflet() %>%
     addTiles() %>%
-    addCircleMarkers(data = newObservation.df, radius = 2, opacity = 0.7,
+    addCircleMarkers(data = newObservation.df, radius = 2, opacity = 0.7, popup = newObservation.df$specie,
                      color = ~pal(username)) %>% 
 addLegend(position = "bottomright",
           pal = pal,
@@ -118,6 +122,24 @@ addLegend(position = "bottomright",
           na.label = "abs d'info")
 
 carto_SE
+
+
+# une carte animée
+
+xp_st_e <- ggmap(get_stamenmap(bb(zone.shp, output = "matrix"),zoom = 16, maptype = "toner-lite"))
+    
+
+xp_st_e + geom_sf(data = newObservation.df,  inherit.aes = FALSE, pch = 16, alpha = 0.7, colour = username, size = 1)  
+
+
+obs_timing <- st_coordinates(newObservation.df)
+obs_timing <- as.data.frame(obs_timing)
+obs_timing$date <- newObservation.df$date
+obs_timing$username <- newObservation.df$username
+
+xp_st_e + 
+    geom_point(data = obs_timing, aes(x = X, y = Y, colour = username), size = 1)
+
 
 ## 2 - Temporalité ==============
 
@@ -134,3 +156,34 @@ ggplot(aes(x = code_activ, fill = username)) +
     geom_bar(position = "dodge") +
     labs(x ="Activités",
          y ="Nombre de relevés") 
+
+# . -------------------------------------------------------------------------- =============
+# II - On refait une carte  ----------------------------------------------------------------- =============
+# . -------------------------------------------------------------------------- =============
+
+
+## 1 - Recup des données ================
+
+zone.shp <- st_read("data/zone_se.shp") # ouverture du fichier de zone 
+st_crs(zone.shp)
+summary(zone.shp)
+
+# on ne garde qu'une zone
+
+zone.shp <- zone.shp[zone.shp$id ==1, ]
+plot(zone.shp)
+
+# on prend les arbres que l'on connait 
+
+arbre_xp.shp <- st_read("data/arbres_se_final.geojson")
+
+# on ne garde que ceux dans les limites de zones, attention je suis en lat/long
+
+arbre_xp_zone.shp <- arbre_xp.shp[zone.shp,]
+
+plot(st_geometry(arbre_xp_zone.shp))
+
+summary(arbre_xp_zone.shp)
+
+carto_SE %>% 
+    addCircleMarkers(data = arbre_xp_zone.shp, popup = arbre_xp_zone.shp$species, radius = 1)
