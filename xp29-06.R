@@ -12,6 +12,7 @@ library(tmaptools)
 library(leaflet)
 library(ggmap)
 library(gganimate)
+library(dplyr)
 
 
 ### stream du json
@@ -67,6 +68,23 @@ exp_brut <- exp_brut[exp_brut$username != "defuneste",]
 # on est pas non plus obliger de garer la date et on peut juste travailler en hms
 
 table(exp_brut$event, exp_brut$activity$index)
+
+## 1 - Recup des données ================
+
+zone.shp <- st_read("data/zone_se.shp") # ouverture du fichier de zone 
+st_crs(zone.shp)
+summary(zone.shp)
+
+# on ne garde qu'une zone
+
+zone.shp <- zone.shp[zone.shp$id ==1, ]
+plot(zone.shp)
+
+# on prend les arbres que l'on connait 
+
+arbre_xp.shp <- st_read("data/arbres_se_final.geojson")
+
+# on ne garde que ceux dans les limites de zones, attention je suis en lat/long
 
 # . -------------------------------------------------------------------------- =============
 # II - Je ne prends que "newObservation" ----------------------------------------------------------------- =============
@@ -131,6 +149,9 @@ newObservation.df <- newObservation.df[zone.shp,]
 
 xp_st_e <- ggmap(get_stamenmap(bb(zone.shp, output = "matrix"),zoom = 16, maptype = "terrain-lines"))
 
+
+arbre_xp_zone.shp <- arbre_xp.shp[zone.shp,]
+
 arbre_xp_zone.coord <-st_coordinates(arbre_xp_zone.shp)
 arbre_xp_zone.coord <- as.data.frame(arbre_xp_zone.coord)
 
@@ -150,17 +171,17 @@ obs_timing$participant[obs_timing$username == "Yoann Duriaux"] <- "Particpant 5"
 obs_timing$participant[obs_timing$username == "pofx"] <- "Particpant 6"
 obs_timing$participant[obs_timing$username == "Catherine JHG"] <- "Particpant 7"
 
-
 unique(obs_timing$username)
 
 xp_st_e_anim <- xp_st_e + 
     geom_point(data = arbre_xp_zone.coord, aes(x = X, y = Y), size = 0.75, col = "#208842", alpha = 0.5) +
+    # geom_point(data = obs_timing, aes(x = X, y = Y), size = 2.5) + 
     geom_point(data = obs_timing, aes(x = X, y = Y, colour = participant), size = 2.5) + 
             xlab("") + ylab("") +
-    transition_time(date) +
-    shadow_trail() +
     ggtitle("Test d'Albiziapp",
-            subtitle = 'Frame {frame} of {nframes}')
+            subtitle = 'Time:{frame_time}') +
+    transition_components(date) +
+    shadow_mark() 
 
 xp_st_e_anim
 
