@@ -11,6 +11,7 @@ library(tmap)
 library(tmaptools)
 library(leaflet)
 library(ggmap)
+library(gganimate)
 
 
 ### stream du json
@@ -114,7 +115,7 @@ pal <- colorFactor(palette =c(get_brewer_pal("Set2", n = 7)),
 
 carto_SE <- leaflet() %>%
     addTiles() %>%
-    addCircleMarkers(data = newObservation.df, radius = 2, opacity = 0.7, popup = newObservation.df$specie,
+    addCircleMarkers(data = newObservation.df, radius = 2, opacity = 0.7, popup = newObservation.df$common,
                      color = ~pal(username)) %>% 
 addLegend(position = "bottomright",
           pal = pal,
@@ -126,20 +127,42 @@ carto_SE
 
 # une carte animée
 
-xp_st_e <- ggmap(get_stamenmap(bb(zone.shp, output = "matrix"),zoom = 16, maptype = "toner-lite"))
-    
+newObservation.df <- newObservation.df[zone.shp,]
+
+xp_st_e <- ggmap(get_stamenmap(bb(zone.shp, output = "matrix"),zoom = 16, maptype = "terrain-lines"))
+
+arbre_xp_zone.coord <-st_coordinates(arbre_xp_zone.shp)
+arbre_xp_zone.coord <- as.data.frame(arbre_xp_zone.coord)
+
 
 xp_st_e + geom_sf(data = newObservation.df,  inherit.aes = FALSE, pch = 16, alpha = 0.7, colour = username, size = 1)  
-
 
 obs_timing <- st_coordinates(newObservation.df)
 obs_timing <- as.data.frame(obs_timing)
 obs_timing$date <- newObservation.df$date
 obs_timing$username <- newObservation.df$username
 
-xp_st_e + 
-    geom_point(data = obs_timing, aes(x = X, y = Y, colour = username), size = 1)
+obs_timing$participant <- "Particpant 1"
+obs_timing$participant[obs_timing$username == "tjoliveau"] <- "Particpant 2"
+obs_timing$participant[obs_timing$username == "JitenshaNiko"] <- "Particpant 3"
+obs_timing$participant[obs_timing$username == "MathDu"] <- "Particpant 4"
+obs_timing$participant[obs_timing$username == "Yoann Duriaux"] <- "Particpant 5"
+obs_timing$participant[obs_timing$username == "pofx"] <- "Particpant 6"
+obs_timing$participant[obs_timing$username == "Catherine JHG"] <- "Particpant 7"
 
+
+unique(obs_timing$username)
+
+xp_st_e_anim <- xp_st_e + 
+    geom_point(data = arbre_xp_zone.coord, aes(x = X, y = Y), size = 0.75, col = "#208842", alpha = 0.5) +
+    geom_point(data = obs_timing, aes(x = X, y = Y, colour = participant), size = 2.5) + 
+            xlab("") + ylab("") +
+    transition_time(date) +
+    shadow_trail() +
+    ggtitle("Test d'Albiziapp",
+            subtitle = 'Frame {frame} of {nframes}')
+
+xp_st_e_anim
 
 ## 2 - Temporalité ==============
 
