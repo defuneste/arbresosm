@@ -71,12 +71,21 @@ arbre_xp_zone.shp <- arbre_xp.shp[zone.shp,] # les arbres attendus
 # II - une carte animée ----------------------------------------------------------------- =============
 # . -------------------------------------------------------------------------- =============
 
-
+## 1 - Fond de cartes  =======
+# ici je prend chez stamen, il faut une bbox bb() de sf 
 xp_st_e <- ggmap(get_stamenmap(bb(zone.shp, output = "matrix"),zoom = 16, maptype = "terrain-lines"))
+
+xp_st_e +
+    
+
+
+# str(xp_st_e)
+# bb(x = xp_st_e$data$lon, y = xp_st_e$data$lat)
 
 arbre_xp_zone.coord <-st_coordinates(arbre_xp_zone.shp)
 arbre_xp_zone.coord <- as.data.frame(arbre_xp_zone.coord)
 
+arbre_xp_zone.shp[bb(x = xp_st_e$data$lon, y = xp_st_e$data$lat),]
 
 obs_timing <- st_coordinates(newObservation.df)
 obs_timing <- as.data.frame(obs_timing)
@@ -94,10 +103,11 @@ obs_timing$participant[obs_timing$username == "Catherine JHG"] <- "Particpant 7"
 unique(obs_timing$username)
 
 xp_st_e_anim <- xp_st_e + 
+    geom_point(aes(x = 4.3860717, y = 45.4496287), size = 4, pch = "M") +# localisation mixeur
     geom_point(data = arbre_xp_zone.coord, aes(x = X, y = Y), size = 0.75, col = "#208842", alpha = 0.5) +
     #geom_point(data = obs_timing, aes(x = X, y = Y), size = 2.5) + 
     geom_point(data = obs_timing, aes(x = X, y = Y, colour = participant), size = 2.5) + 
-    xlab("BILL") + ylab("BOB") +
+    xlab("") + ylab("") +
     ggtitle("Test d'Albiziapp",
             subtitle = 'time:{frame_time}') +
     transition_components(date) +
@@ -105,7 +115,6 @@ xp_st_e_anim <- xp_st_e +
 
 xp_st_e_anim
 
-
-
+anim_save("xp_st_e_anim.gif" , animation = last_animation())
 
 

@@ -4,15 +4,16 @@
 
 library(jsonlite) # pour les json
 library(tidyverse) # envt pour des donnees de type tidy pas trop volumineuse
+library(sp) # ancien package spatial toujours présent
 library(sf) # package spatial
-library(purrr) # functional prog
-library(lubridate)
-library(tmap)
-library(tmaptools)
-library(leaflet)
-library(ggmap)
-library(gganimate)
-library(dplyr)
+library(lubridate) # les dates 
+library(tmap) # cartes statics
+library(tmaptools) # outils de carte dont palette_color
+library(leaflet) # cartes dynamiques
+library(ggmap) # outils pour les cartes statics avec tuiles
+library(gganimate) # animation avec ggplot et map
+library(spatstat) # outils d'analyse point pattern
+library(maptools) # des outils principalements de conversion
 
 
 ### stream du json
@@ -72,17 +73,17 @@ table(exp_brut$event, exp_brut$activity$index)
 ## 1 - Recup des données ================
 
 zone.shp <- st_read("data/zone_se.shp") # ouverture du fichier de zone 
-st_crs(zone.shp)
-summary(zone.shp)
+st_crs(zone.shp) # vérifie le le CRS de la couche
+summary(zone.shp) # verif de base
 
 # on ne garde qu'une zone
-
 zone.shp <- zone.shp[zone.shp$id ==1, ]
 plot(zone.shp)
 
 # on prend les arbres que l'on connait 
-
 arbre_xp.shp <- st_read("data/arbres_se_final.geojson")
+# limité à la zone
+arbre_xp_zone.shp <- arbre_xp.shp[zone.shp,]
 
 # on ne garde que ceux dans les limites de zones, attention je suis en lat/long
 
@@ -94,17 +95,18 @@ arbre_xp.shp <- st_read("data/arbres_se_final.geojson")
 exp_brut$code_activ <- exp_brut$activity$index 
 exp_brut$code_activ <- exp_brut$code_activ+1
 
+# sélection de newObservation
 newObservation <- exp_brut[exp_brut$event == "newObservation",]
 dim(newObservation)
 str(newObservation, max.level = 2)
+names(newObservation)
 
-newObservation.df <- newObservation[,c(5:6,9)] ## attention ici j'ai fait des selections par num de colonnes
-
+newObservation.df <- newObservation[,c("username","date","code_activ")] ## attention ici j'ai fait des selections par noms de colonnes
 # on met la bonne tz 
 attr(newObservation.df$date, "tzone") <- "Europe/Paris"
 
 #### c'est assez hideux mais je fais vite
-
+# on prend la date via une boucle, pe le changer 
 newObservation$point <- NULL
 
 for(i in 1:length(newObservation$event)) {
@@ -124,6 +126,8 @@ names(df_bota) <- c("authorName", "common", "specie", "genus")
 
 newObservation.df <- bind_cols(newObservation.df, df_bota) %>% select(-"authorName")
 
+# ici il n'y a que trois variable exportées, pb  
+#st_write(newObservation.df, "data/newObservation.geojson")
 
 ## 1 - Une carte des nouvelle obs  =======
 
@@ -133,7 +137,11 @@ pal <- colorFactor(palette =c(get_brewer_pal("Set2", n = 7)),
 
 carto_SE <- leaflet() %>%
     addTiles() %>%
-    addCircleMarkers(data = newObservation.df, radius = 2, opacity = 0.7, popup = newObservation.df$common,
+    addCircleMarkers(data = arbre_xp_zone.shp, popup = arbre_xp_zone.shp$species, radius = 1) %>% 
+    addCircleMarkers(data = newObservation.df, radius = 2, opacity = 0.7, 
+                     popup = paste("Nom commun:", newObservation.df$common, "<br>",
+                                   "Sp.:", newObservation.df$specie, "<br>",
+                                   "Genre:", newObservation.df$genus),
                      color = ~pal(username)) %>% 
 addLegend(position = "bottomright",
           pal = pal,
@@ -145,47 +153,10 @@ carto_SE
 
 # une carte animée
 
-newObservation.df <- newObservation.df[zone.shp,]
-
-xp_st_e <- ggmap(get_stamenmap(bb(zone.shp, output = "matrix"),zoom = 16, maptype = "terrain-lines"))
-
-
-arbre_xp_zone.shp <- arbre_xp.shp[zone.shp,]
-
-arbre_xp_zone.coord <-st_coordinates(arbre_xp_zone.shp)
-arbre_xp_zone.coord <- as.data.frame(arbre_xp_zone.coord)
-
-
-xp_st_e + geom_sf(data = newObservation.df,  inherit.aes = FALSE, pch = 16, alpha = 0.7, colour = username, size = 1)  
-
-obs_timing <- st_coordinates(newObservation.df)
-obs_timing <- as.data.frame(obs_timing)
-obs_timing$date <- newObservation.df$date
-obs_timing$username <- newObservation.df$username
-
-obs_timing$participant <- "Particpant 1"
-obs_timing$participant[obs_timing$username == "tjoliveau"] <- "Particpant 2"
-obs_timing$participant[obs_timing$username == "JitenshaNiko"] <- "Particpant 3"
-obs_timing$participant[obs_timing$username == "MathDu"] <- "Particpant 4"
-obs_timing$participant[obs_timing$username == "Yoann Duriaux"] <- "Particpant 5"
-obs_timing$participant[obs_timing$username == "pofx"] <- "Particpant 6"
-obs_timing$participant[obs_timing$username == "Catherine JHG"] <- "Particpant 7"
-
-unique(obs_timing$username)
-
-xp_st_e_anim <- xp_st_e + 
-    geom_point(data = arbre_xp_zone.coord, aes(x = X, y = Y), size = 0.75, col = "#208842", alpha = 0.5) +
-    # geom_point(data = obs_timing, aes(x = X, y = Y), size = 2.5) + 
-    geom_point(data = obs_timing, aes(x = X, y = Y, colour = participant), size = 2.5) + 
-            xlab("") + ylab("") +
-    ggtitle("Test d'Albiziapp",
-            subtitle = 'Time:{frame_time}') +
-    transition_components(date) +
-    shadow_mark() 
-
-xp_st_e_anim
+# il faut aller dans gif_xp.R
 
 ## 2 - Temporalité ==============
+# à travailler
 
 plot(newObservation.df$date)
 
@@ -208,26 +179,41 @@ ggplot(aes(x = code_activ, fill = username)) +
 
 ## 1 - Recup des données ================
 
-zone.shp <- st_read("data/zone_se.shp") # ouverture du fichier de zone 
-st_crs(zone.shp)
-summary(zone.shp)
-
-# on ne garde qu'une zone
-
-zone.shp <- zone.shp[zone.shp$id ==1, ]
-plot(zone.shp)
-
-# on prend les arbres que l'on connait 
-
-arbre_xp.shp <- st_read("data/arbres_se_final.geojson")
 
 # on ne garde que ceux dans les limites de zones, attention je suis en lat/long
-
-arbre_xp_zone.shp <- arbre_xp.shp[zone.shp,]
 
 plot(st_geometry(arbre_xp_zone.shp))
 
 summary(arbre_xp_zone.shp)
 
-carto_SE %>% 
-    addCircleMarkers(data = arbre_xp_zone.shp, popup = arbre_xp_zone.shp$species, radius = 1)
+## 2 - nndist ================
+
+newObservation_zone.df <- newObservation.df[zone.shp,]
+
+## ici on passe en sp avec sf
+xp_sp <- as(st_transform(newObservation_zone.df, 2154), "Spatial")
+## ici on passe en ppp avec maptools
+xp_ppp <- as.ppp(xp_sp) 
+
+## on verifie 
+class(xp_ppp)
+str(xp_ppp)
+
+## on plot
+plot(xp_ppp$x, xp_ppp$y)
+# ici juste dans un veteur
+# nndist vient de spatstat 
+arbre_plus_proche <- nndist(xp_ppp)
+class(arbre_plus_proche)
+length(arbre_plus_proche)
+head(arbre_plus_proche)
+
+## on sauve comme une nouvelle variable
+newObservation_zone.df$dist <- nndist(xp_ppp)
+
+# un graph
+newObservation_zone.df %>% 
+    ggplot(aes(dist)) + # il faut un facteur pour utiliser colours
+    geom_freqpoly(binwidth = 1) + 
+    xlab("distance (m)") +
+    ylab("Nombres d'arbres")

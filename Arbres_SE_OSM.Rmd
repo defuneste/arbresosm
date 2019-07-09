@@ -466,13 +466,13 @@ arbres_xp <- left_join (arbres_xp, temp_order, by =c ("genus" = "genus" ))
 ```{r}
 arbres_xp %>% 
     st_set_geometry(value = NULL) %>% # on drop la geométrie
-    ggplot(aes(x= reorder(genus, n),  fill = as.factor(id))) + # ici on reoder avec n et on met id n factor pour le remplissage
-    geom_bar() + 
+    ggplot(aes(x= reorder(genus, n))) + #  fill = as.factor(id))) + # ici on reoder avec n et on met id n factor pour le remplissage
+    geom_bar(fill = "#8BBFDD") + 
     labs(x="Genre",
          ylab="Nombre d'arbres") +
     coord_flip() + 
-    scale_fill_manual(values = c("#90D18D", "#8BBFDD"),  # des couleurs moins piquantes
-                                     name = "Zonage", labels = c("Elargi", "Reduit")) + # la legende
+    #scale_fill_manual(values = c("#90D18D", "#8BBFDD"),  # des couleurs moins piquantes
+    #                                 name = "Zonage", labels = c("Elargi", "Reduit")) + # la legende
     theme(axis.text=element_text(size=8)) # on diminue la taille des labels
 
  
@@ -504,10 +504,10 @@ arbres_xp$dist <- nndist(xp_ppp)
 
 # un graph
 arbres_xp %>% 
-ggplot(aes(dist, colour = as.factor(id))) + # il faut un facteur pour utiliser colours
+ggplot(aes(dist)) + #colour = as.factor(id))) + # il faut un facteur pour utiliser colours
     geom_freqpoly(binwidth = 1) + # freqpoly avec un binwidth de 1 m 
-    scale_colour_manual(values = (c("#90D18D", "#8BBFDD")),  # des couleurs moins piquantes
-                                     name = "Zonage", labels = c("Elargi", "Reduit")) + # la legende
+    # scale_colour_manual(values = (c("#90D18D", "#8BBFDD")),  # des couleurs moins piquantes
+    #                                  name = "Zonage", labels = c("Elargi", "Reduit")) + # la legende
     xlab("distance (m)") +
     ylab("Nombres d'arbres")
 
