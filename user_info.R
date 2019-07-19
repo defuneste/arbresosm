@@ -185,8 +185,10 @@ liste_user.dat <- user.dat %>%
     group_by(nom) %>% 
     summarise(nb_arbre = n(),
               duree = max(ts) - min(ts)) %>% 
-    arrange(nb_arbre) %>% # ici je classe par par ordre descendant car je vais utiliser plus loin pour faire une courbe de lorentz
-    mutate(order = 1:length(liste_user.dat$nom)) 
+    arrange(nb_arbre) # ici je classe par par ordre descendant car je vais utiliser plus loin pour faire une courbe de lorentz
+liste_user.dat <- liste_user.dat %>% 
+ mutate(order = 1:length(liste_user.dat$nom)) 
+
 
 #  nombre d'utilsateurs contribuant aux arbres
 dim(liste_user.dat)
@@ -196,19 +198,67 @@ mean(liste_user.dat$nb_arbre) # moyenne
 
 liste_user.dat$cumsum_nbarbre <- cumsum(liste_user.dat$nb_arbre) # somme cumulée des arbres
 
+# des pourcentages
+liste_user.dat <- liste_user.dat %>% 
+    mutate(pourcent_order = order/max(liste_user.dat$order)*100,
+           pourcent_arbre = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre)*100)
+
+# ici j' ai regarde les rangs
+text_lorentz <- slice(liste_user.dat, c(2495,2549,2564))
+label_text_lorentz <- c("73 contributeurs", "20 contributeurs", "5 contributeurs")
+
+
+## constitution d'un tableau pour les profils d'utilisteurs : 
+
+dbListTables(con)
+
+# on produit un tableau avec le decompte par types
+# attention je part du principe que la zone (france) de la base de données
+# est bien correspondante : ce qui est pas tout à le cas
+
+poly_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS count
+                             FROM planet_osm_polygon 
+                             GROUP BY nom;")
+
+ligne_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS count
+                              FROM planet_osm_roads
+                              GROUP BY nom;" )
+
+poi_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS count
+                            FROM planet_osm_point
+                            GROUP BY nom;")
+# on ajoute le tout
+
+OSM_user <- rbind(poly_count.dat, ligne_count.dat, poi_count.dat )
+
+OSM_user_tot <- OSM_user %>% 
+    group_by(nom) %>% 
+    summarise(comptage = sum(count)) %>% 
+    arrange(comptage) # ici je classe par par ordre descendant car je vais utiliser plus loin pour faire une courbe de lorentz
+
+OSM_user_tot <- OSM_user_tot %>% 
+    mutate(order = 1:length(OSM_user_tot$nom)) 
+
+OSM_user_tot$cumsum_nbarbre <- cumsum(OSM_user_tot$comptage) # somme cumulée des arbres
+
+sum(OSM_user_tot$comptage)
+
+
 # ici order est divisé par son max et pareil pour la somme cumuléé
 # cela les passe de 0 à 1 et on modifie les labels avec 
 # scales::percent
 ggplot(liste_user.dat, aes(x = order/max(liste_user.dat$order), y = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre))) +
     geom_line(col = "forestgreen", lwd = 1.5) +
+    geom_line(data = OSM_user_tot, aes(x = order/max(OSM_user_tot$order) , 
+                                       y = cumsum_nbarbre/max(OSM_user_tot$cumsum_nbarbre)), lty = 2, col = "gray30") +
     scale_x_continuous(labels = scales::percent) +
     scale_y_continuous(labels = scales::percent) +
-    labs( x = "Pourcentage d'arbres ajoutés",
-          y = "Pourcentage de contributeurs", 
+    labs( y = "Pourcentage d'arbres ajoutés",
+          x = "Pourcentage de contributeurs", 
           caption = "© OpenStreetMap contributors") + 
+    geom_text(data = text_lorentz, aes(x = order/max(liste_user.dat$order), y = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre)),
+              label = label_text_lorentz, hjust= 1.1, col = "gray50") +
     theme_bw()
-
-plot(liste_user.dat$cumsum_nbarbre, liste_user.dat$nb_arbre)
 
 ## comptage du nombre de jour ou un arbre à été ajouté modifié
 
@@ -233,75 +283,7 @@ liste_user.dat <- liste_user.dat %>%
 
 dim(liste_user.dat)
 
-## constitution d'un tableau pour les profils d'utilisteurs : 
 
-# nb de polygones
-poly_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS poly_count
-                             FROM planet_osm_polygon
-                             WHERE  tags -> 'osm_user' IN (SELECT DISTINCT tags -> 'osm_user' AS nom
-                             FROM planet_osm_point
-                             WHERE planet_osm_point.natural = 'tree')
-                             GROUP BY nom
-                             ORDER BY poly_count DESC;")
-dim(poly_count.dat)
-
-#nb de lignes
-ligne_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS ligne_count
-                              FROM planet_osm_roads
-                              WHERE  tags -> 'osm_user' IN (SELECT DISTINCT tags -> 'osm_user' AS nom
-                              FROM planet_osm_point
-                              WHERE planet_osm_point.natural = 'tree')
-                              GROUP BY nom
-                              ORDER BY ligne_count DESC;" )
-dim(ligne_count.dat)
-
-# nb de poi
-poi_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS poi_count
-                            FROM planet_osm_point
-                            WHERE  tags -> 'osm_user' IN (SELECT DISTINCT tags -> 'osm_user' AS nom
-                            FROM planet_osm_point
-                            WHERE planet_osm_point.natural = 'tree')
-                            GROUP BY nom
-                            ORDER BY poi_count DESC;")
-dim(poi_count.dat)
-
-# join et passage des na en 0 , on fait aussi une typo en fonction du1/9/90
-
-profil_user.dat <- liste_user.dat %>%
-    left_join(poi_count.dat, by = "nom") %>%
-    left_join(ligne_count.dat, by = "nom") %>% 
-    left_join(poly_count.dat , by = "nom") %>% 
-    replace_na(list(ligne_count = 0, poly_count = 0)) %>%
-    mutate(ranking = 1:length(liste_user.dat$nom),
-           type_user = factor(case_when(ranking <= round(length(liste_user.dat$nom)/100) ~ "1%", 
-                                 ranking > round(length(liste_user.dat$nom)/100)  &
-                                 ranking <= round((length(liste_user.dat$nom)/100)*10) ~ "9%",
-                                 ranking > round((length(liste_user.dat$nom)/100)*10) ~ "90%")
-                              , levels = c("90%","9%","1%"), ordered = T))
-
-## une petite verif
-table(profil_user.dat$type_user)
-
-# graph des sum des 90/9/1
-ggplot(profil_user.dat, aes(y = nb_arbre, x = type_user)) +
-    geom_bar(stat = "summary_bin", fun.y = "sum") +
-    scale_x_discrete("Contributeurs") +
-    scale_y_continuous("Nombres d'arbres")
-
-
-tail(profil_user.dat)
-
-plot(profil_user.dat$nb_arbre, profil_user2.dat$arbre_jour)
-
-summary(profil_user.dat)
-
-profil_user.dat$type_user
-
-# sauver si besoin
-write.csv(profil_user.dat2, "profile.csv")
-
-# des greps pour tester des pseudo de com com
-# unique(user.dat$user)[grep(pattern = "Paris|paris", unique(user.dat$user))]
 
 # se deconnecter de la base
 
