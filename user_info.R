@@ -75,6 +75,7 @@ str(user.shp)
 
 # chargement du scripts des limites administratives
 source("limites_administratives.R")
+rm(commune_osm.shp)
 
 ##    3 - Preprocessing des données  ================
 
@@ -271,8 +272,34 @@ liste_user.dat <- liste_user.dat %>%
 
 dim(liste_user.dat)
 
+##    3 - Contribution par dpt    ================
 
+#user_shape.shp contient la geométrie et les users
+user_france.shp <- st_join(user_france.shp, dpt.shp["name"]) 
 
-# se deconnecter de la base
+# visualisation 
+user_france.shp %>% 
+    st_set_geometry(value = NULL) %>% # on drop la geométrie pour aller plus vite
+    group_by(nom) %>% # on group pas nom
+    summarise(dpt_nombre = n_distinct(name)) %>%  # on compte par dpt distincts
+    ggplot() +
+    geom_histogram(aes(x = dpt_nombre), binwidth = 1, fill = "darkblue") +
+    labs( y = "Nombre de contributeurs",
+          x = "Nombre de départements de contributions", 
+          caption = "© Contributeurs OpenStreetMap "
+        ) + 
+    theme_bw()
+
+# sauvegarde de l'information
+
+temp_user <- user_france.shp %>% 
+    st_set_geometry(value = NULL) %>% # on drop la geométrie pour aller plus vite
+    group_by(nom) %>% # on group pas nom
+    summarise(dpt_nombre = n_distinct(name))
+
+liste_user.dat <- liste_user.dat %>%
+    left_join(temp_user, by = "nom")
+
+## FIN: se deconnecter de la base ===================
 
 dbDisconnect(con)
