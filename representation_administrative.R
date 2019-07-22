@@ -4,7 +4,9 @@
 # pour me rapeller qu'un objet à des infos geometriques type vecteur je lui accolle un .shp
 # si c'est un raster .grid, si c'est un dataframe souvent un .dat
 
-# Chargement des différents packages demandés ===========
+##.###################################################################################33
+## I Chargement des différents packages demandés ====
+##.#################################################################################33
 
 ### DB
 library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
@@ -34,10 +36,11 @@ library(units) # gestion des unités pour ha
 library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
 
 
-#### Lecture des communes en france source geofla =======
 
 ####  regarder avec OSM
 # il faut établir une connexion 
+
+source("code.R")
 
 pw <- {
     chargelepwd # à charger avant
@@ -55,46 +58,11 @@ con <- dbConnect(drv, dbname = "franceuser",
                  user = "postgres", password = pw) # idem pour user
 rm(pw) # mouais
 
-# on prend les communes dans OSM c'est plus à jour que geofla
-commune_osm.shp  <- st_read(con,  query = "SELECT name,tags -> 'ref:INSEE' AS INSEE, way  
-                                            FROM planet_osm_polygon
-                                            WHERE boundary = 'administrative'  AND admin_level = '8';")
-summary(commune_osm.shp) # petits verifs
-st_crs(commune_osm.shp) # verification du CRS
-
-# on prend les regions dans OSM pour un fond
-france.shp <- st_read(con,  query = "SELECT name, way
-                                    FROM planet_osm_polygon
-                                    WHERE boundary = 'administrative'  AND admin_level = '4';")
-
-# un simplify, il faut js et la library mapshaper d'installer
-# sys = TRUE l'utilise
-france_simplify.shp <- ms_simplify(france.shp, sys = TRUE) 
-# plot(france_simplify.shp) verif
-
-# on prends les arbres
-species.shp <- st_read(con,  query = "SELECT way, tags -> 'species' AS species, tags -> 'genus' AS genus
-FROM planet_osm_point
-WHERE planet_osm_point.natural = 'tree';")
-
-# on utilise mapshaper il faut js mapshaper d'installer surtout ici avec sys= T 
-commune_simplify.shp <- ms_simplify(commune_osm.shp, sys = TRUE) 
+# chargement du script des limites
+source("limites_administratives.R")
 
 # une fois le simplify ok on libère de la place
 rm(commune_osm.shp)
-
-#commune.shp <- st_read("data/GEOFLA_COMMUNE_2016/COMMUNE_WGS84.shp") # je prend pas le geofla 
-#summary(commune.shp)                                                 # au final OSM est mieux
-#str(commune.shp)                                                     # regarder admin express
-
-##### jointure avec type de communes ===================
-type_commune.dat <- read.csv("data/type_commune.csv", sep = "\t")
-summary(type_commune.dat)
-str(type_commune.dat)
-
-commune_type.shp <- commune_simplify.shp %>% 
-    filter(!is.na(insee)) %>% # on fait un filtre avec les communes qui n'ont pas de COG des non fr
-    left_join(type_commune.dat, by = c("insee" = "CODGEO")) # la jointure
 
 # verification des NA
 commune_type.shp %>%
@@ -124,18 +92,15 @@ france_commune_map + #  on ajoute à shape
             tm_scale_bar(position = c( "center", "BOTTOM"))
 
 
-### stats par type de commune ==============
 
-# un polygone pour la france provenant des données admnistrative
-france.shp <- commune_type.shp %>%
-        st_union() # un gros merge sur l'ensemble
-st_crs(france.shp) # verif du CRS
+##.###################################################################################33
+## II stats par type de commune ====
+##.#################################################################################33
 
-# on ne garde que les arbres dans ces limites
 
 str(species.shp) # on regarde combien on a d'arbres
 
-# # on coupe pour la france =============================
+## 1 on coupe pour la france =============================
 species_france.shp <- species.shp[france.shp,] 
 str(species_france.shp) # on perd pas mal d'arbres, geneve ? 
 
@@ -145,6 +110,7 @@ species_france_type.shp <- st_join(species_france.shp, commune_type.shp[c("TYPE_
 # je vais definir le "un peu d'info" comme ayant une indication au niveau du genre ou de l'espece meme fausse
 # il y a peu d'erreurs sur le genre donc c'est moins grave, espèce est plus compliquée
 
+## 2 Un nouveau champ pour les données bota =============================
 species_france_type.shp$info <- 0 # un nouveau champ
 species_france_type.shp$info[!is.na(species_france_type.shp$genus)] <- 1 # il prend 1 quamd j'ai une info sur genus
 species_france_type.shp$info[!is.na(species_france_type.shp$species)] <- 1 # il prend 1 quamd j'ai une info sur species

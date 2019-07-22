@@ -6,6 +6,8 @@
 ## I Chargement des différents packages demandés ====
 ##.#################################################################################33
 
+source("code.R")
+
 ### DB
 library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
 
@@ -62,20 +64,43 @@ st_crs(commune_osm.shp) # verification du CRS
 
 ##    2 - Recup des regions  ================
 # on prend les regions dans OSM pour un fond
-france.shp <- st_read(con,  query = "SELECT name, way
+region.shp <- st_read(con,  query = "SELECT name, way
                                     FROM planet_osm_polygon
                                     WHERE boundary = 'administrative'  AND admin_level = '4';")
 
+
+##    3 - Recup des departements ================
+dpt.shp <- st_read(con,  query = "SELECT name, way
+                                    FROM planet_osm_polygon
+                                    WHERE boundary = 'administrative'  AND admin_level = '6';")
+
+
+##.###################################################################################33
+## III Traitements  ====
+##.#################################################################################33
+
 # un simplify, il faut js et la library mapshaper d'installer
 # sys = TRUE l'utilise et evite de passer par une API
-france_simplify.shp <- ms_simplify(france.shp, sys = TRUE) 
+france_simplify.shp <- ms_simplify(region.shp, sys = TRUE) 
+
 # plot(france_simplify.shp) verif
+
+type_commune.dat <- read.csv("data/type_commune.csv", sep = "\t")
+# summary(type_commune.dat)
+# str(type_commune.dat)
+
+# on utilise mapshaper il faut js mapshaper d'installer surtout ici avec sys= T 
+commune_simplify.shp <- ms_simplify(commune_osm.shp, sys = TRUE) 
+
+commune_type.shp <- commune_simplify.shp %>% 
+    filter(!is.na(insee)) %>% # on fait un filtre avec les communes qui n'ont pas de COG des non fr
+    left_join(type_commune.dat, by = c("insee" = "CODGEO")) # la jointure
 
 france.shp <- commune_type.shp %>%
     filter(!is.na(insee)) %>% 
     st_union() # un gros merge sur l'ensemble
 
-st_crs(france.shp) # verif du CRS
+# st_crs(france.shp) # verif du CRS
 
 
 

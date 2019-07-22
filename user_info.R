@@ -9,7 +9,8 @@
 ## I Chargement des différents packages demandés ====
 ##.#################################################################################33
 
-#  
+# chargement des codes depend de l'ent  
+source("code.R")
 
 ### DB
 library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
@@ -71,28 +72,9 @@ dim(user.shp)
 str(user.shp)
 
 ##    2 - Recup des shape util  ================
-# on prend les communes dans OSM c'est plus à jour que geofla
-commune_osm.shp  <- st_read(con,  query = "SELECT name,tags -> 'ref:INSEE' AS INSEE, way  
-                                            FROM planet_osm_polygon
-                                            WHERE boundary = 'administrative'  AND admin_level = '8';")
-summary(commune_osm.shp) # petits verifs
-st_crs(commune_osm.shp) # verification du CRS
 
-# on prend les regions dans OSM pour un fond
-france.shp <- st_read(con,  query = "SELECT name, way
-                                    FROM planet_osm_polygon
-                                    WHERE boundary = 'administrative'  AND admin_level = '4';")
-
-# un simplify, il faut js et la library mapshaper d'installer
-# sys = TRUE l'utilise et evite de passer par une API
-france_simplify.shp <- ms_simplify(france.shp, sys = TRUE) 
-# plot(france_simplify.shp) verif
-
-france.shp <- commune_type.shp %>%
-    filter(!is.na(insee)) %>% 
-    st_union() # un gros merge sur l'ensemble
-
-st_crs(france.shp) # verif du CRS
+# chargement du scripts des limites administratives
+source("limites_administratives.R")
 
 ##    3 - Preprocessing des données  ================
 
