@@ -197,6 +197,7 @@ median(liste_user.dat$nb_arbre) # mediane
 mean(liste_user.dat$nb_arbre) # moyenne
 
 liste_user.dat$cumsum_nbarbre <- cumsum(liste_user.dat$nb_arbre) # somme cumulée des arbres
+sum(liste_user.dat$nb_arbre) == max(liste_user.dat$cumsum_nbarbre) # verif de parano
 
 # des pourcentages
 liste_user.dat <- liste_user.dat %>% 
@@ -241,24 +242,29 @@ OSM_user_tot <- OSM_user_tot %>%
 
 OSM_user_tot$cumsum_nbarbre <- cumsum(OSM_user_tot$comptage) # somme cumulée des arbres
 
-sum(OSM_user_tot$comptage)
+sum(OSM_user_tot$comptage) # nombre d'objet dans OSM france
 
 
 # ici order est divisé par son max et pareil pour la somme cumuléé
 # cela les passe de 0 à 1 et on modifie les labels avec 
 # scales::percent
 ggplot(liste_user.dat, aes(x = order/max(liste_user.dat$order), y = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre))) +
-    geom_line(col = "forestgreen", lwd = 1.5) +
-    geom_line(data = OSM_user_tot, aes(x = order/max(OSM_user_tot$order) , 
-                                       y = cumsum_nbarbre/max(OSM_user_tot$cumsum_nbarbre)), lty = 2, col = "gray30") +
+    geom_path(aes(colour = "forestgreen"), size = 1.5) +
+        geom_line(data = OSM_user_tot, aes(x = order/max(OSM_user_tot$order) , 
+                                       y = cumsum_nbarbre/max(OSM_user_tot$cumsum_nbarbre), colour = "gray30"), lty = 2) +
     scale_x_continuous(labels = scales::percent) +
     scale_y_continuous(labels = scales::percent) +
     labs( y = "Pourcentage d'arbres ajoutés",
           x = "Pourcentage de contributeurs", 
-          caption = "© OpenStreetMap contributors") + 
+          caption = "© Contributeurs OpenStreetMap ") + 
     geom_text(data = text_lorentz, aes(x = order/max(liste_user.dat$order), y = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre)),
               label = label_text_lorentz, hjust= 1.1, col = "gray50") +
-    theme_bw()
+    scale_colour_manual(name = '', 
+                        values =c("forestgreen"="forestgreen","gray30"="gray30"), labels = c("Arbres isolés","Objets OSM")) +
+    theme_bw() +
+    theme(legend.position = "top")
+
+
 
 ## comptage du nombre de jour ou un arbre à été ajouté modifié
 
