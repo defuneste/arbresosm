@@ -75,7 +75,7 @@ str(user.shp)
 
 # chargement du scripts des limites administratives
 source("limites_administratives.R")
-rm(commune_osm.shp)
+rm(commune_osm.shp) # on enleve ce fichier gros et pas utile pour de la visualisation
 
 ##    3 - Preprocessing des données  ================
 
@@ -164,7 +164,6 @@ user.dat %>%
 
 # liste des utilisteurs avec le nombre d'arbres
 liste_user.dat <- user.dat %>% 
-    #filter(ts > "2018-11-01") %>% 
     group_by(nom) %>% 
     summarise(nb_arbre = n(),
               duree = max(ts) - min(ts)) %>% 
@@ -277,7 +276,24 @@ dim(liste_user.dat)
 #user_shape.shp contient la geométrie et les users
 user_france.shp <- st_join(user_france.shp, dpt.shp["name"]) 
 
-# visualisation 
+# on a des NA (85) verification :
+
+user_na.shp <- user_france.shp %>% 
+    filter(is.na(name))
+
+plot(st_geometry(france.shp))
+plot(st_geometry(user_na.shp), add = T, col = "red")
+
+# je vais dropper les NA, le pb vient que je fais le tri sur le shape des communes simplifié 
+# pas le meme que celui des dpts
+
+user_france.shp <- user_france.shp %>% 
+    filter(!is.na(name))
+
+
+# la majorité des points sont genevois donc devrait 
+
+# histograme contributeurs contribuant dans un ou plus de un departements
 user_france.shp %>% 
     st_set_geometry(value = NULL) %>% # on drop la geométrie pour aller plus vite
     group_by(nom) %>% # on group pas nom
@@ -289,6 +305,38 @@ user_france.shp %>%
           caption = "© Contributeurs OpenStreetMap "
         ) + 
     theme_bw()
+
+# Une approximation des users par dpt
+
+# ici on peut obtenir un nombre d'arbres par dpt par user
+
+dpt_user.shp <- dpt_simplify.shp %>% 
+                left_join(user_france.shp %>% # left join pour joindre via le nom de dpt
+    st_set_geometry(value = NULL) %>% # on drop la geométrie pour aller plus vite, ici pe benchmarquer si on gagne du tenps `a `
+    group_by(name) %>% 
+    summarise(nbr_contrib = n_distinct(nom)), by = c("name" = "name"))
+
+# on affiche les données
+dpt_user.shp$nbr_contrib
+
+summary(dpt_user.shp$nbr_contrib)
+
+# un histo pour tester
+ggplot(dpt_user.shp, aes( x = nbr_contrib)) +
+    geom_histogram(breaks = seq(0, 200, by = 25), colour = "white")
+
+tm_shape(dpt_user.shp) +
+    tm_borders("grey", lwd = 1) +
+    tm_shape(st_centroid(dpt_user.shp)) +
+    tm_bubbles(col = "darkblue", size = "nbr_contrib", scale = 2, alpha = 0.5, 
+               border.alpha = 0,  size.lim = c(min(dpt_user.shp$nbr_contrib, na.rm = T),200), 
+               sizes.legend = seq(25, 225, by = 100), title.size = "Nbr. de contributeurs",
+               legend.size.is.portrait = TRUE) +
+    tm_scale_bar(position = c("center", "bottom")) +
+    tm_credits("© OpenStreetMap contributors", size = 0.5, position=c("left", "top")) +
+    tm_layout(legend.position = c("left","bottom"))
+
+plot(dpt.shp)
 
 # sauvegarde de l'information
 

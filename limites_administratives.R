@@ -102,5 +102,7 @@ france.shp <- commune_type.shp %>%
 
 # st_crs(france.shp) # verif du CRS
 
+#  un simplify sur les dpt
 
+dpt_simplify.shp  <- ms_simplify(dpt.shp, sys = TRUE)
 
