@@ -127,7 +127,7 @@ names(df_bota) <- c("authorName", "common", "specie", "genus")
 newObservation.df <- bind_cols(newObservation.df, df_bota) %>% select(-"authorName")
 
 # ici il n'y a que trois variable exportées, pb  
-#st_write(newObservation.df, "data/newObservation.geojson")
+st_write(newObservation.df, "data/newObservation.geojson")
 
 ## 1 - Une carte des nouvelle obs  =======
 

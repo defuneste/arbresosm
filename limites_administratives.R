@@ -32,21 +32,21 @@ library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
 
 # il faut établir une connexion 
 
-pw <- {
-    chargelepwd # à charger avant
-}
-
-# charge les drivers pour postgre 
-drv <- dbDriver("PostgreSQL")
-# class(drv) #une verif
-
-# fais un pont vers la db réutilisable
-# ici j'ai pris une db en local pour tester
-# con sera utilisé pour chaque connection et pkoi le franciser
-con <- dbConnect(drv, dbname = "franceuser",
-                 host = "localhost", port = port, # attention 5432 par défaut
-                 user = "postgres", password = pw) # idem pour user
-rm(pw) # mouais
+# pw <- {
+#     chargelepwd # à charger avant
+# }
+# 
+# # charge les drivers pour postgre 
+# drv <- dbDriver("PostgreSQL")
+# # class(drv) #une verif
+# 
+# # fais un pont vers la db réutilisable
+# # ici j'ai pris une db en local pour tester
+# # con sera utilisé pour chaque connection et pkoi le franciser
+# con <- dbConnect(drv, dbname = "franceuser",
+#                  host = "localhost", port = port, # attention 5432 par défaut
+#                  user = "postgres", password = pw) # idem pour user
+# rm(pw) # mouais
 
 
 ##.###################################################################################33

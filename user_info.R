@@ -29,6 +29,7 @@ library(ggmap)# carto +
 library(leaflet) # carto web
 library(rsconnect) # pour partager une carte
 
+
 ## analyse spatiale / carto
 library(sp) # classes et methodes pour données spatiales pe déclassé par SF
 library(rgdal) #gdal pour projection, crud et surtout export
@@ -316,6 +317,27 @@ dpt_user.shp <- dpt_simplify.shp %>%
     group_by(name) %>% 
     summarise(nbr_contrib = n_distinct(nom)), by = c("name" = "name"))
 
+
+nb_contrib_principal <- user_france.shp %>% 
+    st_set_geometry(value = NULL) %>% # on drop la geométrie pour aller plus vite, ici pe benchmarquer si on gagne du tenps `a `
+    group_by(nom, name) %>% # on regroupe par nom d'user et pas nom de dpt
+    summarise(nbr_contrib = n()) %>%  # on compte dans ces categories
+    group_by(nom) %>%  # on regroupe par nom
+    filter(nbr_contrib == max(nbr_contrib)) %>% # on filtre en fonction de quand le nbr de contrib est égale au max
+    # du coup attention il peut y avoir des egalités (ce qui me dérange pas on va assumer que le contributeur est sur les deux dpts)
+    group_by(name) %>% 
+    summarise(nb_contrib_principal = n()) 
+
+# on ajoute le nombre de contributeurs principaux (ayant le plus de contribution d'arbre isolés là)  
+# on pourrait essayer de la faire sur l'ensemble des contribution
+
+dpt_user.shp <- dpt_user.shp %>% 
+                    left_join(nb_contrib_principal, by = c("name", "name"))
+
+dpt_user.shp$nb_contrib_principal[is.na(dpt_user.shp$nb_contrib_principal)] <- 0
+
+st_write(dpt_user.shp, "data/dpt.shp")
+
 # on affiche les données
 dpt_user.shp$nbr_contrib
 
@@ -325,13 +347,18 @@ summary(dpt_user.shp$nbr_contrib)
 ggplot(dpt_user.shp, aes( x = nbr_contrib)) +
     geom_histogram(breaks = seq(0, 200, by = 25), colour = "white")
 
+
 tm_shape(dpt_user.shp) +
     tm_borders("grey", lwd = 1) +
     tm_shape(st_centroid(dpt_user.shp)) +
     tm_bubbles(col = "darkblue", size = "nbr_contrib", scale = 2, alpha = 0.5, 
-               border.alpha = 0,  size.lim = c(min(dpt_user.shp$nbr_contrib, na.rm = T),200), 
-               sizes.legend = seq(25, 225, by = 100), title.size = "Nbr. de contributeurs",
+               border.alpha = 0,  size.max = 197, 
+               sizes.legend = seq(50, 200, by = 50), title.size = "Nbr. de contributeurs",
                legend.size.is.portrait = TRUE) +
+    tm_shape(st_centroid(dpt_user.shp)) +
+    tm_bubbles(col = "green",  size = "nb_contrib_principal", scale = 2
+               ,  size.max = 197,
+               alpha = 0.5, sizes.legend = seq(25, 225, by = 100)) +
     tm_scale_bar(position = c("center", "bottom")) +
     tm_credits("© OpenStreetMap contributors", size = 0.5, position=c("left", "top")) +
     tm_layout(legend.position = c("left","bottom"))

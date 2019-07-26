@@ -21,8 +21,6 @@ library(ggplot2) # la visualisation
 library(tmap) # carto
 library(tmaptools) # + outils pour tmap
 library(ggmap)# carto +
-library(ggspatial) # carto + en train de remplacer ggmap ?
-library(rosm)
 library(leaflet) # carto web
 library(rsconnect) # pour partager une carte
 library(RColorBrewer) # des palettes
