@@ -313,7 +313,7 @@ user_france.shp %>%
 
 dpt_user.shp <- dpt_simplify.shp %>% 
                 left_join(user_france.shp %>% # left join pour joindre via le nom de dpt
-    st_set_geometry(value = NULL) %>% # on drop la geométrie pour aller plus vite, ici pe benchmarquer si on gagne du tenps `a `
+    st_set_geometry(value = NULL) %>% # on drop la geométrie pour aller plus vite user
     group_by(name) %>% 
     summarise(nbr_contrib = n_distinct(nom)), by = c("name" = "name"))
 
@@ -335,6 +335,9 @@ dpt_user.shp <- dpt_user.shp %>%
                     left_join(nb_contrib_principal, by = c("name", "name"))
 
 dpt_user.shp$nb_contrib_principal[is.na(dpt_user.shp$nb_contrib_principal)] <- 0
+
+# calcul des "visiteurs" 
+dpt_user.shp$visit_contrib <- dpt_user.shp$nbr_contrib - dpt_user.shp$nb_contrib_principal
 
 st_write(dpt_user.shp, "data/dpt.shp")
 
