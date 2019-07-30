@@ -334,10 +334,15 @@ nb_contrib_principal <- user_france.shp %>%
 dpt_user.shp <- dpt_user.shp %>% 
                     left_join(nb_contrib_principal, by = c("name", "name"))
 
+# on elenve les non dpt fr
+dpt_user.shp <- dpt_user.shp %>% 
+    filter(!is.na(nbr_contrib))
+
 dpt_user.shp$nb_contrib_principal[is.na(dpt_user.shp$nb_contrib_principal)] <- 0
 
 # calcul des "visiteurs" 
 dpt_user.shp$visit_contrib <- dpt_user.shp$nbr_contrib - dpt_user.shp$nb_contrib_principal
+
 
 st_write(dpt_user.shp, "data/dpt.shp")
 
@@ -358,10 +363,6 @@ tm_shape(dpt_user.shp) +
                border.alpha = 0,  size.max = 197, 
                sizes.legend = seq(50, 200, by = 50), title.size = "Nbr. de contributeurs",
                legend.size.is.portrait = TRUE) +
-    tm_shape(st_centroid(dpt_user.shp)) +
-    tm_bubbles(col = "green",  size = "nb_contrib_principal", scale = 2
-               ,  size.max = 197,
-               alpha = 0.5, sizes.legend = seq(25, 225, by = 100)) +
     tm_scale_bar(position = c("center", "bottom")) +
     tm_credits("© OpenStreetMap contributors", size = 0.5, position=c("left", "top")) +
     tm_layout(legend.position = c("left","bottom"))
@@ -377,6 +378,7 @@ temp_user <- user_france.shp %>%
 
 liste_user.dat <- liste_user.dat %>%
     left_join(temp_user, by = "nom")
+
 
 ## FIN: se deconnecter de la base ===================
 

@@ -14,6 +14,7 @@ library(ggmap) # outils pour les cartes statics avec tuiles
 library(gganimate) # animation avec ggplot et map
 library(spatstat) # outils d'analyse point pattern
 library(maptools) # des outils principalements de conversion
+library(purrr)
 
 
 ### stream du json
@@ -121,8 +122,20 @@ st_crs(newObservation.df) = 4326 # le bon scr
 # le t() est juste pour un transpose
 # as.data.frame est pour en faire un df
 
-df_bota <- as.data.frame(t(sapply(newObservation[["object"]], `[`, c("authorName","common" , "specie", "genus"))))
+df_bota <- as.data.frame(t(sapply(newObservation[["object"]], `[`, c("authorName", "common" , "specie", "genus"))))
 names(df_bota) <- c("authorName", "common", "specie", "genus")
+
+# on a un pb avec le sapply on genere des listes il faut le corriger
+df_bota$common[df_bota[["common"]] == "NULL"] <- NA
+df_bota$specie[df_bota[["specie"]] == "NULL"] <- NA
+df_bota$genus[df_bota[["genus"]] == "NULL"] <- NA
+
+df_bota$authorName <- unlist(df_bota$authorName)
+df_bota$common <- unlist(df_bota$common)
+df_bota$specie <- unlist(df_bota$specie)
+df_bota$genus <- unlist(df_bota$genus)
+
+str(df_bota)
 
 newObservation.df <- bind_cols(newObservation.df, df_bota) %>% select(-"authorName")
 
@@ -217,3 +230,24 @@ newObservation_zone.df %>%
     geom_freqpoly(binwidth = 1) + 
     xlab("distance (m)") +
     ylab("Nombres d'arbres")
+
+# . -------------------------------------------------------------------------- =============
+# III - Différents effets de l'envt possible  ----------------------------------------------------------------- =============
+# . -------------------------------------------------------------------------- =============
+
+## 1 - Effet du point de départ  ================
+
+# x = 4.3860717, y = 45.4496287), size = 4, pch = "M") +# localisation mixeur
+
+# tester différentes distance par rapport à lui
+
+## 2 - Effet par rapport au dernier point  ================
+
+
+## 3 - Effet par rapport à la densité arborée  ================
+
+## 4 - Effet par rapport à la diversité arborée  ================
+
+# . -------------------------------------------------------------------------- =============
+# IV - Différents effets des activités  ----------------------------------------------------------------- =============
+# . -------------------------------------------------------------------------- =============
