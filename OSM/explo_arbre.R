@@ -38,9 +38,9 @@ dbExistsTable(con, "points") # une verification
 
 # soyons fou 
 
-user.shp <- st_read(con,  query = "select osm_uid, osm_timestamp from points;")
+time_user.dat <- st_read(con,  query = "select osm_timestamp from points;")
 
-user.shp$osm_timestamp <- as.Date(user.shp$osm_timestamp)
+time_user.dat$osm_timestamp <- as.Date(time_user.dat$osm_timestamp)
 # on peut aussi regarder les heures de cartographie mais attention au decalage horaires
 
 ggplot(user.shp, aes(x = osm_timestamp)) +
@@ -48,3 +48,37 @@ ggplot(user.shp, aes(x = osm_timestamp)) +
     xlab("Années") +
     ylab("Nb. arbres isolés") +
     labs(caption ="source : © les contributeurs d’OpenStreetMap")
+
+
+user.dat <- st_read(con,  query = "select osm_uid from points;")
+head(user.dat)
+
+# liste des utilisteurs avec le nombre d'arbres
+liste_user.dat <- user.dat %>% 
+    group_by(osm_uid) %>% 
+    summarise(nb_arbre = n()) %>% 
+    arrange(nb_arbre) 
+
+liste_user.dat$cumsum_nbarbre <- cumsum(liste_user.dat$nb_arbre)
+sum(liste_user.dat$nb_arbre) == max(liste_user.dat$cumsum_nbarbre)
+
+liste_user.dat <- liste_user.dat %>% 
+    mutate(order = 1:length(liste_user.dat$osm_uid)) 
+
+liste_user.dat <- liste_user.dat %>% 
+    mutate(pourcent_order = order/max(liste_user.dat$order)*100,
+       pourcent_arbre = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre)*100)
+
+ggplot(liste_user.dat, aes(x = order/max(order), y = cumsum_nbarbre/max(cumsum_nbarbre))) +
+    geom_path(aes(colour = "forestgreen"), size = 1.5) +
+        scale_x_continuous(labels = scales::percent) +
+    scale_y_continuous(labels = scales::percent) +
+    labs( y = "Pourcentage d'arbres ajoutés",
+          x = "Pourcentage de contributeurs", 
+          caption = "© Contributeurs OpenStreetMap ") + 
+    scale_colour_manual(name = '', 
+                        values =c("forestgreen"="forestgreen","gray30"="gray30"), labels = c("Arbres isolés","Objets OSM")) +
+    theme_bw() +
+    theme(legend.position = "top")
+
+dbDisconnect(con)
