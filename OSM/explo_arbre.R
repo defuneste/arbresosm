@@ -62,6 +62,7 @@ liste_user.dat <- user.dat %>%
 liste_user.dat$cumsum_nbarbre <- cumsum(liste_user.dat$nb_arbre)
 sum(liste_user.dat$nb_arbre) == max(liste_user.dat$cumsum_nbarbre)
 
+# calcul d'un indice de gini
 liste_user.dat <- liste_user.dat %>% 
     mutate(order = 1:length(liste_user.dat$osm_uid)) 
 
@@ -80,5 +81,6 @@ ggplot(liste_user.dat, aes(x = order/max(order), y = cumsum_nbarbre/max(cumsum_n
                         values =c("forestgreen"="forestgreen","gray30"="gray30"), labels = c("Arbres isolés","Objets OSM")) +
     theme_bw() +
     theme(legend.position = "top")
+
 
 dbDisconnect(con)
