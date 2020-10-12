@@ -18,7 +18,7 @@ str(ne_countries(returnclass='sf'))
 countries <- ne_countries(returnclass='sf')
 
 continent.shp <- countries %>% 
-    dplyr::select(subregion) %>% 
-    group_by(subregion) %>% st_union()
+    dplyr::select(continent) %>% 
+    group_by(continent) %>% st_union(by_feature =  "continent")
 
 plot(continent.shp)
