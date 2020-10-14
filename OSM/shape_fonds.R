@@ -9,16 +9,20 @@
 ## I Chargement des différents packages demandés et données ====
 ##.#################################################################################33
 
-
 pkgs <-  c("sf", "rnaturalearth", "dplyr")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
-str(ne_countries(returnclass='sf'))
+# str(ne_countries(returnclass='sf'))
+
+# countries110 <- ne_download(scale = 110, type = 'countries')
+# sp::plot(countries110)
 
 countries <- ne_countries(returnclass='sf')
 
 continent.shp <- countries %>% 
     dplyr::select(continent) %>% 
-    group_by(continent) %>% st_union(by_feature =  "continent")
+    group_by(continent) %>% summarise()
 
-plot(continent.shp)
+rm(countries)
+# 
+# plot(continent.shp)

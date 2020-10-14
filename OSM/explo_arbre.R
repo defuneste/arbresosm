@@ -12,7 +12,7 @@
 # chargement des codes depend de l'envt  
 source("code.R")
 
-pkgs <-  c("RPostgreSQL","dplyr", "lubridate", "ggplot2", "sf")
+pkgs <-  c("RPostgreSQL","dplyr", "lubridate", "ggplot2", "sf", "DBI")
 inst <- lapply(pkgs, library, character.only = TRUE)
 
 # il faut établir une connexion 
@@ -30,7 +30,7 @@ con <- dbConnect(drv, dbname = dbname,
 
 rm(chargelepwd, port, dbname)
 
-dbExistsTable(con, "points") # une verification
+dbListTables(con) # une verification
 
 ##.###################################################################################33
 ## II debut explo ====
@@ -81,6 +81,34 @@ ggplot(liste_user.dat, aes(x = order/max(order), y = cumsum_nbarbre/max(cumsum_n
                         values =c("forestgreen"="forestgreen","gray30"="gray30"), labels = c("Arbres isolés","Objets OSM")) +
     theme_bw() +
     theme(legend.position = "top")
+
+
+#### 1- Exploration spatiale =============================================
+
+source("shape_fonds.R")
+
+extrait_arbre <- st_read(con,  query = "select * from points limit 10;")
+str(extrait_arbre)
+
+count <- st_read(con,  query = "select count(*) from points;")
+count
+
+plot(extrait_arbre$wkb_geometry)
+
+arbres.shp <- st_read(con,  query = "select wkb_geometry from points;")
+
+# on sauve les continents dans la base
+dbWriteTable(con, 
+             name = "continent",
+             value = continent.shp, 
+             overwrite = TRUE
+              )
+
+st_read(con, query = "select * from continent;")
+
+##.###################################################################################33
+## III deconnection ====
+##.#################################################################################33
 
 
 dbDisconnect(con)
