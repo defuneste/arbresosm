@@ -93,18 +93,43 @@ str(extrait_arbre)
 count <- st_read(con,  query = "select count(*) from points;")
 count
 
+
 plot(extrait_arbre$wkb_geometry)
 
 arbres.shp <- st_read(con,  query = "select wkb_geometry from points;")
 
-# on sauve les continents dans la base
+dbExecute(con, "create table continent(
+                    continent varchar(40),
+                    geometry geometry(MULTIPOLYGON,  4326)
+                    );")
+
 dbWriteTable(con, 
              name = "continent",
              value = continent.shp, 
-             overwrite = TRUE
-              )
+             overwrite = FALSE,
+             append = TRUE, 
+             binary = FALSE
+)
+
+# marche pas je sais pas pkoi
+dbGetQuery(con, query = "select count(*), c.continent
+    from continent as c
+    join points as t
+    on ST_Intersects(c.geometry, t.wkb_geometry)
+    group by c.continent;")
+
+dbExecute(con, query = "alter table points add continent VARCHAR(40);")
+
+"insert into points (continent) 
+select c.continent from points as t join continent as c on st_intersects(c.geometry, t.wkb_geometry);"
 
 st_read(con, query = "select * from continent;")
+
+st_crs(continent.shp)
+# on sauve les continents dans la base
+
+
+
 
 ##.###################################################################################33
 ## III deconnection ====
