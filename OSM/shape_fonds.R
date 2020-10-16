@@ -17,6 +17,10 @@ inst <- lapply(pkgs, library, character.only = TRUE)
 # countries110 <- ne_download(scale = 110, type = 'countries')
 # sp::plot(countries110)
 
+<<<<<<< HEAD
+=======
+countries <- ne_countries(returnclass='sf', scale = 10)
+>>>>>>> 5efe59c2595ee99053138dc32dc738b383c4b5e7
 
 continent10.shp <-st_read("data/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp")
 
@@ -24,6 +28,12 @@ continent.shp <- continent10.shp  %>%
     dplyr::select(CONTINENT) %>% 
     group_by(CONTINENT) %>% summarise()
 
+
+continent10.shp <-st_read("data/ne_10m_admin_0_countries/ne_10m_admin_0_countries.shp")
+
+continent10a.shp <- continent10.shp %>% 
+                    dplyr::select(CONTINENT) %>% 
+                    group_by(CONTINENT) %>% summarise()
 
 rm(countries)
 # 
