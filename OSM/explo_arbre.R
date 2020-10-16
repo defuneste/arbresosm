@@ -85,18 +85,23 @@ ggplot(liste_user.dat, aes(x = order/max(order), y = cumsum_nbarbre/max(cumsum_n
 
 #### 1- Exploration spatiale =============================================
 
-source("shape_fonds.R")
+# ouverture de shape pour les continents 
+ source("OSM/shape_fonds.R")
 
+# quelques tests
 extrait_arbre <- st_read(con,  query = "select * from points limit 10;")
 str(extrait_arbre)
-
-count <- st_read(con,  query = "select count(*) from points;")
-count
-
-
+# affichage 
 plot(extrait_arbre$wkb_geometry)
+#nb de points
+count <- st_read(con,  query = "select count(*) from points;")
 
-arbres.shp <- st_read(con,  query = "select wkb_geometry from points;")
+# count
+
+test_continent <- st_read(con,  query = "select count(*), continent from points group by continent;")
+
+sum(test_continent$count)
+arbres.shp <- st_read(con,  query = "select * from points limit 10;")
 
 dbExecute(con, "create table continent(
                     continent varchar(40),
@@ -109,7 +114,12 @@ dbWriteTable(con,
              overwrite = FALSE,
              append = TRUE, 
              binary = FALSE
-)
+            )
+
+# une copie 
+dbExecute("select * 
+          into copy_arbre
+          from points;")
 
 # marche pas je sais pas pkoi
 dbGetQuery(con, query = "select count(*), c.continent
@@ -120,10 +130,22 @@ dbGetQuery(con, query = "select count(*), c.continent
 
 dbExecute(con, query = "alter table points add continent VARCHAR(40);")
 
-"insert into points (continent) 
-select c.continent from points as t join continent as c on st_intersects(c.geometry, t.wkb_geometry);"
+dbExecute("update points 
+            set continent = (select c.continent 
+            from points as t 
+            join continent as c 
+            on st_intersects(c.geometry, t.wkb_geometry)
+            where points.ogc_fid = t.ogc_fid)
+        ;")
 
-st_read(con, query = "select * from continent;")
+
+continent_na.shp <- st_read(con, query = "select points.continent, points.wkb_geometry from points where continent is NULL;") 
+
+nbr <- 100
+echantillon <- sample(1:nrow(continent_na.shp), size = nbr)
+
+library(mapview)
+mapview(list(continent_na.shp[echantillon,],continent10a.shp))
 
 st_crs(continent.shp)
 # on sauve les continents dans la base
