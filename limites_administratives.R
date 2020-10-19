@@ -43,9 +43,9 @@ pw <- {
 # fais un pont vers la db réutilisable
 # ici j'ai pris une db en local pour tester
 # con sera utilisé pour chaque connection et pkoi le franciser
-con <- dbConnect(drv, dbname = "franceuser",
-                  host = "localhost", port = port, # attention 5432 par défaut
-                  user = "postgres", password = pw) # idem pour user
+con <- dbConnect(drv, dbname = dbname,
+                  host = adresse, port = port, # attention 5432 par défaut
+                  user = usr, password = pw) # idem pour user
 rm(pw) # mouais
 
 
