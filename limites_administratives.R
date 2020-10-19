@@ -96,6 +96,8 @@ commune_type.shp <- commune_simplify.shp %>%
     filter(!is.na(insee)) %>% # on fait un filtre avec les communes qui n'ont pas de COG des non fr
     left_join(type_commune.dat, by = c("insee" = "CODGEO")) # la jointure
 
+st_write(commune_type.shp, "data/commune.shp")
+
 france.shp <- commune_type.shp %>%
     filter(!is.na(insee)) %>% 
     st_union() # un gros merge sur l'ensemble
