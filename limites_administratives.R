@@ -82,6 +82,7 @@ dpt.shp <- st_read(con,  query = "SELECT name, way
 # un simplify, il faut js et la library mapshaper d'installer
 # sys = TRUE l'utilise et evite de passer par une API
 france_simplify.shp <- ms_simplify(region.shp, sys = TRUE) 
+dpt_simplify.shp <-  ms_simplify(dpt.shp , sys = TRUE) 
 
 # plot(france_simplify.shp) verif
 
@@ -97,6 +98,8 @@ commune_type.shp <- commune_simplify.shp %>%
     left_join(type_commune.dat, by = c("insee" = "CODGEO")) # la jointure
 
 st_write(commune_type.shp, "data/commune.shp")
+st_write(france_simplify.shp, "data/regions_simp.shp")
+st_write(dpt_simplify.shp, "data/dpt_simp.shp")
 
 france.shp <- commune_type.shp %>%
     filter(!is.na(insee)) %>% 
