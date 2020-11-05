@@ -266,14 +266,15 @@ sum(platanes$comptage)
 
 ### présences des " arbres" de reveries dans OSM
 
-esp <- read.csv("nomsp_nomverma.csv", sep = "\t") # sp. de reveries
+esp <- read.csv("data/nomsp_nomverma.csv", sep = "\t") # sp. de reveries
 
-species.dat %>%
+ranking <- species.dat %>%
     filter(species %in% esp$Species) %>%
     group_by(species) %>%
     summarize(comptage = n()) %>%
     arrange(desc(comptage))
 
+openxlsx::write.xlsx(ranking, "data/rangking.xls")
 
 ### présences des arbres par land use 
 
