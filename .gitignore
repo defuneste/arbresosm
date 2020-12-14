@@ -1,5 +1,5 @@
-packrat/lib*/
-data/
+/packrat/lib*/
+/data
 graphs/
 .Rproj.user
 .Rhistory
