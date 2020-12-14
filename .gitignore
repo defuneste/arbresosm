@@ -1,23 +1,8 @@
-/packrat/lib*/
+## repertoire en ignore
+/packrat/lib*
 /data
-graphs/
+/graphs
 .Rproj.user
 .Rhistory
 .RData
-repartitionattribut.png
-france_esp.png
-champsosm.png
-champs_osm.png
-luluc_niv1.shp
-luluc_niv1.dbf
-luluc_niv1.prj
-luluc_niv1.shx
-CLC12_FR_RGF.shx
-CLC12_FR_RGF.shp
-CLC12_FR_RGF.prj
-CLC12_FR_RGF.dbf
-abr_arbres_alignement.abrarbre.dbf
-abr_arbres_alignement.abrarbre.prj
-abr_arbres_alignement.abrarbre.shp
-abr_arbres_alignement.abrarbre.shx
 code.R
