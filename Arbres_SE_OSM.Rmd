@@ -14,13 +14,13 @@ library(tibble)
 library(tidyr)
 library(lubridate) # date
 library(stringr) # modif sur character
-library(rlist)
+#library(rlist)
 
 ### visualisation
 library(ggplot2) # la visualisation
 library(tmap) # carto
 library(tmaptools) # + outils pour tmap
-library(ggmap)# carto +
+#library(ggmap)# carto +
 library(leaflet) # carto web
 library(rsconnect) # pour partager une carte
 library(RColorBrewer) # des palettes
