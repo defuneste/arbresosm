@@ -1,7 +1,7 @@
 ## repertoire en ignore
-/packrat/lib*
-/data
-/graphs
+data/
+graphs/
+rapport/
 .Rproj.user
 .Rhistory
 .RData

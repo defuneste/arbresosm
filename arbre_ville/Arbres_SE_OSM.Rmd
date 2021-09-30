@@ -1,0 +1,357 @@
+---
+title: "Imports Arbres SE"
+author: "Olivier Leroy"
+date: "25 avril 2019"
+output: html_document
+---
+
+# Chargement des bibliothèques 
+
+```{r, echo=FALSE}
+### manip
+library(dplyr) # manip de données en tidyverse
+library(tibble)
+library(tidyr)
+library(lubridate) # date
+library(stringr) # modif sur character
+#library(rlist)
+
+### visualisation
+library(ggplot2) # la visualisation
+library(tmap) # carto
+library(tmaptools) # + outils pour tmap
+#library(ggmap)# carto +
+library(leaflet) # carto web
+library(rsconnect) # pour partager une carte
+library(RColorBrewer) # des palettes
+
+## analyse spatiale / carto
+library(sp) # classes et methodes pour données spatiales pe déclassé par SF
+library(rgdal) #gdal pour projection, crud et surtout export
+library(rgeos) # geos, penser à installer libgeos++-dev avant, travail avec objet sp
+library(sf) # nouveau package de classes et methodes spatiales doit "remplacer" rgdal et rgeos (et ofc sp) 
+library(units) # gestion des unités pour ha
+library(spatstat) # point patern anlysis
+library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
+library(maptools) # des outils principalements de conversion
+```
+
+# Lecture des données 
+
+```{r}
+arbres_se.shp <- st_read("data/arbres_se_brut.geojson", stringsAsFactors = FALSE)
+summary(arbres_se.shp)
+```
+
+EPSG : 3946
+
+25984 point 
+
+Toutes les infos dans DESCRIPTION qui est une chaine de caractères 
+
+# Recodage des données
+
+```{r}
+plot(arbres_se.shp)
+```
+
+
+## Pour le genre
+
+```{r}
+# word() permet de sélectionner des "mots"  dans des lignes de caractères, mot étant définit comme separer par whitespace
+arbres_se.shp$genus <- word(arbres_se.shp$DESCRIPTION, 1) # ici on peut prendre le premier mot et assumer le genre, genus dans OSM
+sort(unique(arbres_se.shp$genus), na.last = F)
+```
+
+### Erreurs 
+
+Il y a un "x" , "indéterminé" et "inconnu"
+
+#### Pb lié à "x"
+
+```{r}
+arbres_se.shp[arbres_se.shp$genus == "x",]
+```
+
+Il semble que ce ne sont que les cyprès de Leyland, les Cyprés de Leyland glauque et les chitalpa qui ne soient concernés (36 cas). La meilleure solution est probablement de supprimé le "x"dans le champs DESCRIPTION. 
+
+
+```{r}
+arbres_se.shp$DESCRIPTION[arbres_se.shp$genus == "x"]
+```
+
+```{r}
+# on remplace DESCRIPTION qui posséde un x par une version sans x
+# attention besoin de generer un premier genus
+arbres_se.shp$DESCRIPTION[arbres_se.shp$genus == "x"] <- str_remove(arbres_se.shp$DESCRIPTION[arbres_se.shp$genus == "x"],  "\\s|[x]\\s")
+```
+
+
+
+#### Pb lié à "indéterminé"
+
+```{r}
+arbres_se.shp[arbres_se.shp$genus == "Indéterminé",]
+```
+
+Pour les "indéterminé"s (1072 cas) il me semble que cela correspond à des emplacements vide d'arbres, Ici je suis plus sur l'idée d'un import dans OSM de les supprimer car ils ne correspondent pas à des arbres.
+
+```{r}
+arbres_se.shp <- arbres_se.shp %>% 
+        filter(! genus == "Indéterminé")
+    
+summary(arbres_se.shp)
+```
+
+#### pb lié à inconnu
+
+```{r}
+arbres_se.shp[arbres_se.shp$genus == "inconnu",]
+```
+
+#### Localisation d' inconnu
+
+```{r}
+
+SE_inconnu.shp <- arbres_se.shp %>% 
+    filter(genus == "inconnu") %>% 
+    st_transform(4326)
+
+
+carto_SE <- leaflet() %>%
+    addTiles() %>%
+    addCircleMarkers(data = SE_inconnu.shp, radius = 2) 
+  
+carto_SE
+
+```
+
+Ce n'est pas 'evident de savoir à quoi cela correspond (certains sont sur la photo aerienne d'autres pas), je suis d'avis de ne pas garder
+
+```{r}
+arbres_se.shp <- arbres_se.shp %>% 
+        filter(! genus == "inconnu")
+    
+summary(arbres_se.shp)
+```
+
+
+
+### Ré-initialisation de genus
+
+
+```{r}
+arbres_se.shp$genus <- word(arbres_se.shp$DESCRIPTION, 1) # ici on peut prendre le premier mot et assumer le genre, genus dans OSM
+sort(unique(arbres_se.shp$genus))
+```
+```{r}
+arbres_se.shp %>% 
+    st_set_geometry(value = NULL) %>% # drop de la geometrie 
+    group_by(genus) %>% # il faut avoir un champ pour ordomer
+    summarise(comptage = n()) %>%  # donc je passe par un tableau intermediare
+    filter(comptage >= 75) %>% 
+    ggplot(aes(x = reorder(genus, comptage), y = comptage)) + # ici x est ordonné par comptage
+    geom_bar(stat =  "identity") + # stat = identity car on a un tableau de valeur par genre et pas un count
+    coord_flip() + # on change de sens 
+    xlab("") +
+    ylab("Nombre d'arbres") +
+    #titre 
+    ggtitle("Principaux genres à Saint-Étienne", subtitle = "Genres avec au moins 75 occurences") +
+    theme(axis.text.y = element_text(size = 8)) # modification de la taille de l'axe y
+```
+
+
+## Pour l'espece
+
+### exploration et correction 
+
+```{r}
+sort(unique(word(arbres_se.shp$DESCRIPTION, 2)))
+```
+
+ Il semble y avoir au moins 4 problèmes "x", "sp.", "" et "inconnu"
+ 
+```{r}
+## attention c'est du base R, donc pas ultra lisibile
+arbres_se.shp$species <- paste(word(arbres_se.shp$DESCRIPTION, 1), word(arbres_se.shp$DESCRIPTION, 2)) # initialisation
+
+arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == "sp."] <- NA # sp en NA
+arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == "inconnu"] <- NA # inconnu en NA
+
+# pour "x" on va prendre les trois premiers mots pour constituer l'hybride, c'est long car il y a pas mal d'indexation
+# on indexe par rapport à "x"
+arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == "x"] <- paste(word(arbres_se.shp$DESCRIPTION, 1)[word(arbres_se.shp$DESCRIPTION, 2) == "x"], word(arbres_se.shp$DESCRIPTION, 2)[word(arbres_se.shp$DESCRIPTION, 2) == "x"], word(arbres_se.shp$DESCRIPTION, 3)[word(arbres_se.shp$DESCRIPTION, 2) == "x"])
+
+# un test
+sort(unique(arbres_se.shp$species), na.last = F)
+```
+ 
+ 
+ Il y a des NA à vérifier
+ 
+ 
+```{r}
+unique(arbres_se.shp$DESCRIPTION[is.na(arbres_se.shp$species)])
+```
+ 
+ 
+ sp. et inconnu sont bien des NA dans species par contre on a deux erreurs: 
+ 
+ * Styphnolobium  japonicum
+ * Xanthocyparis  nootkatensis
+ 
+ Elles sont dues à des whitespace après le nom de genre
+ 
+```{r}
+# dans le cas d'un double whispace entre le genre et l'especes on prend le premier et troisieme mot
+arbres_se.shp$species[word(arbres_se.shp$DESCRIPTION, 2) == ""] <- paste(word(arbres_se.shp$DESCRIPTION, 1)[word(arbres_se.shp$DESCRIPTION, 2) == ""], word(arbres_se.shp$DESCRIPTION, 3)[word(arbres_se.shp$DESCRIPTION, 2) == ""])
+## on verifie que les deux espèces Styphnolobium et Xanthocyparis
+sort(unique(arbres_se.shp$species), na.last = F)   
+    
+```
+ 
+ ## Quelques stats de bases
+ 
+```{r}
+arbres_se.shp %>% 
+    st_set_geometry(value = NULL) %>% # drop de la geometrie 
+    group_by(species) %>% # il faut avoir un champ pour ordomer
+    summarise(comptage = n()) %>%  # donc je passe par un tableau intermediare
+    filter(comptage >= 100  &
+            !is.na(species)   ) %>% ## ici je rajoute un filtre sur les NA
+    ggplot(aes(x = reorder(species, comptage), y = comptage)) + # ici x est ordonné par comptage
+    geom_bar(stat =  "identity") + # stat = identity car on a un tableau de valeur par genre et pas un count
+    coord_flip() + # on change de sens 
+    xlab("") +
+    ylab("Nombre d'arbres") +
+    #titre 
+    ggtitle("Principales éspèces à Saint-Étienne", subtitle = "Espèces avec au moins 100 occurences") +
+    theme(axis.text.y = element_text(size = 8)) # modification de la taille de l'axe y
+```
+ 
+ Les platanes sont fortements en tête. Les érables, proches en genre, se divisent en deux especes bien présentes (platanoides et pseudoplatanus) et trois autres espèces moins présentes. 
+ 
+# les noms vernaculaires
+ 
+Ils sont dans DESCRIPTION après ":"
+
+```{r}
+# un patron qui prend tout après ": "
+patron <- "(?<=\\:\\s).*"
+
+
+arbres_se.shp <- arbres_se.shp %>% 
+    # ici le "species:fr" pourrait être un "taxon:fr" car on pas mal de nom de cultivar
+    # on extrait tout ce qui correspond au patron, le str_extract est plus cours qu'une indexation avec un grep
+    # par contre il ne retourne que le premier cas, si il n'y en a plusieurs ce qui ne devrait pas être notres cas
+    mutate("species:fr" = str_extract(arbres_se.shp$DESCRIPTION, pattern = "(?<=\\:\\s).*"))
+
+# ici c'est juste un graph pour verifier 
+# arbres_se.shp %>% 
+#     st_set_geometry(value = NULL) %>% # drop de la geometrie 
+#     group_by(`species:fr`) %>% # il faut avoir un champ pour ordomer
+#     summarise(comptage = n()) %>%  # donc je passe par un tableau intermediare
+#     filter(comptage >= 100  &
+#             !is.na(`species:fr`)   ) %>% ## ici je rajoute un filtre sur les NA
+#     ggplot(aes(x = reorder(`species:fr`, comptage), y = comptage)) + # ici x est ordonné par comptage
+#     geom_bar(stat =  "identity") + # stat = identity car on a un tableau de valeur par genre et pas un count
+#     coord_flip() + # on change de sens 
+#     xlab("") +
+#     ylab("Nombre d'arbres") +
+#     #titre 
+#     ggtitle("Principales éspèces à Saint-Étienne", subtitle = "Espèces avec au moins 100 occurences") +
+#     theme(axis.text.y = element_text(size = 8)) # modification de la taille de l'axe y
+```
+
+# verfification occupé - libre
+## Extraction
+Il y a dans DESCRIPTION un "emplacement" pour chaque arbre qui peut être qualifié soit de Vide soit Occupé. 
+
+```{r}
+# occupation prend la valeur de 1 pour tous
+arbres_se.shp$occupation <- 1 
+# si "Vide" est present prend la valeur 0, on le fait via une indexation sur un grep
+arbres_se.shp$occupation[grep(pattern = "Vide" , arbres_se.shp$DESCRIPTION)] <- 0
+# table pour resume
+table(arbres_se.shp$occupation)
+```
+
+Il y a 163 "Emplacement Vide". Verifions ensuite si il y a patron quelconque derrière. 
+
+## Verification 
+
+```{r}
+arbres_se.shp %>% 
+    st_set_geometry(value = NULL) %>% 
+    filter(occupation == 0) %>% 
+    select(genus, species)
+```
+
+Il ne semble pas qu'il y ai des différences notables.  
+
+# Préparation des données
+
+## Selection et filtre des variables
+
+```{r}
+arbres_se.final.shp <- arbres_se.shp %>% 
+  rename("ref:FR:Saint-Etienne:tree" = GID) %>% # on garde l'id de la BD
+  mutate("source:name" = "Arbres d'alignement de la ville de Saint-Etienne", #source des données
+         denotation = "avenue") %>% # arbre d'avenue, c'est pas tjrs le cas 
+  select(-APIC_CDATE, -APIC_MDATE, -NATURE, -CD_LIMCO, -RIVOLI, -occupation, -DESCRIPTION) # on enleve les champs non utiles dans OSM
+summary(arbres_se.final.shp) # une verif
+```
+
+## leaf_type et leaf_cycle
+
+
+```{r}
+
+leaf2 <- read.csv2("data/leaf_type_ajout.csv", sep = ",", stringsAsFactors = FALSE) # ouverture du fichier 
+summary(leaf2)
+leaf2 <- leaf2 %>% 
+    mutate(Genus = str_trim(leaf2$Genus))
+unique(leaf2$Genus)
+
+```
+
+Le fichier CSV provient du [wiki](https://wiki.openstreetmap.org/wiki/FR:Tag:natural%3Dtree).
+
+Il pose un probleme interessant : des genres peuvent avoir des espèces décidues (deciduous) et sempervirentes (evergreen) : dans les chênes il y a les chênes pubescents et les chênes verts. 
+
+
+```{r, "verfication des genres presents"}
+sort(unique(arbres_se.final.shp$genus)[unique(arbres_se.final.shp$genus) %in% leaf2$Genus]) # liste des genres presents
+sort(unique(arbres_se.final.shp$genus)[!(unique(arbres_se.final.shp$genus) %in% leaf2$Genus)]) # liste des genres absents
+```
+
+```{r, "join sur genus"}
+arbres_se.final.shp <- arbres_se.final.shp %>% # une jointure
+               left_join(leaf2, by = c("genus" = "Genus"))
+summary(arbres_se.final.shp)
+head(arbres_se.final.shp)
+```
+
+
+# Export 
+
+```{r, message=FALSE, "sous fichiers pour facilier l'export"}
+## il faut dans ce cas transformer pour le bon CRS
+arbres_se.final.shp <- st_transform(arbres_se.final.shp, 4326)
+st_crs(arbres_se.final.shp)
+
+## un gros json pour le moment dans l'avenir pe le diviser
+# st_write(arbres_se.final.shp, dsn = "data/arbres_se_final.geojson")
+```
+
+## on vire les NULL du json
+
+Ici semble inutile
+
+```{r}
+# test <- list.load("arbres_se.final.json")
+# test_clean <- list.clean(test)
+# list.save(test_clean, "arbres_se.final.json")
+```
+
