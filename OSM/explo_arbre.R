@@ -1,49 +1,27 @@
-### projet pour l'analyse des arbres seul dans OSM 
-# exploration et "nettoyage des données"
-# octobre 2020
-# Petites notes sur le code :
-# pour me rapeller qu'un objet à des infos geometriques type vecteur je lui accolle un .shp
-# si c'est un raster .grid, si c'est un dataframe souvent un .dat
+# Date: octobre 2020, reprise octobre 2021
+# Auteur: Olivier Leroy  www.branchtwigleaf.com/
+# Objectif: charger la base d'osm france postgres
+# Description du problème:s
+# La base est sur debian de l'université cf.
+# maj_totale_france_journalisé.sh
+# /!\ la deconnection n'est pas 
+# Libraries utilisées:
+# "RPostgreSQL", "sf" 
 
-##.###################################################################################33
-## I Chargement des différents packages demandés et données ====
-##.#################################################################################33
+source("OSM/connect_db_france.R")
 
-# chargement des codes depend de l'envt  
-source("code.R")
-
-pkgs <-  c("RPostgreSQL","dplyr", "lubridate", "ggplot2", "sf", "DBI")
-inst <- lapply(pkgs, library, character.only = TRUE)
-
-# il faut établir une connexion 
-
-# charge les drivers pour postgre 
-drv <- dbDriver("PostgreSQL")
-# class(drv) #une verif
-
-# fais un pont vers la db réutilisable
-# ici j'ai pris une db en local pour tester
-# con sera utilisé pour chaque connection et pkoi le franciser
-con <- dbConnect(drv, dbname = dbname,
-                 host = "localhost", port = port, 
-                 user = "postgres", password = chargelepwd) # idem pour user
-
-rm(chargelepwd, port, dbname)
-
-dbListTables(con) # une verification
-
-##.###################################################################################33
-## II debut explo ====
-##.#################################################################################33
+library(sf)
 
 # soyons fou 
 
-time_user.dat <- st_read(con,  query = "select osm_timestamp from points;")
+# cerveau de poule : tags est le champs hstore on le requete comme ceci tags -> 'key' as nouveau_nom
 
-time_user.dat$osm_timestamp <- as.Date(time_user.dat$osm_timestamp)
+time_user.dat <- st_read(con,  query = "select tags -> 'osm_timestamp' as timestamp from planet_osm_point;")
+
+time_user.dat$timestamp <- as.Date(time_user.dat$timestamp)
 # on peut aussi regarder les heures de cartographie mais attention au decalage horaires
 
-ggplot(user.shp, aes(x = osm_timestamp)) +
+ggplot(time_user.dat, aes(x = timestamp)) +
     geom_histogram(binwidth = 15) +
     xlab("Années") +
     ylab("Nb. arbres isolés") +

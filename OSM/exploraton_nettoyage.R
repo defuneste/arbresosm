@@ -102,41 +102,10 @@ FROM  (
    ORDER  BY 1 
    ) sub;"
 
-# second temps executer la query
+# second temps executer la query c'est un peu brute
 
 arbre_tag_sql <- dbGetQuery(con, query) # retoune la requête à lancer
 arbretemp_tags <- dbGetQuery(con, arbre_tag_sql[1,1]) # ici il faut prendre la première ligne/colonne
-
-# petite vérification
-dim(arbretemp_tags)
-names(arbretemp_tags)
-
-# on groupe les deux tables
-arbres_osm <- full_join(arbretemp, arbretemp_tags, by = "osm_id") #ici un bind_col pourrait aussi marcher
-dim(arbres_osm)
-names(arbres_osm) # le fichier est bien volumineux 
-
-names_champs <- arbres_osm %>% # une liste de champs 
-    # on prend tous (".") ce qui n'est pas NA (!is.na()) que l' on compte 
-    # et on en fait une fonction 
-    summarise_all(funs(sum(!is.na(.)))) %>%  
-    t()  # puis on le retranspose 
-    
-dim(names_champs) # petite verif
-
-names_champs <- rownames_to_column(as.data.frame(names_champs), var = "champs") # on passe les noms de champs dans une variable
- 
-barplot(sort(names_champs$V1, decreasing = T)) # un graphique rapide
-
-names_champs <- names_champs %>% 
-    arrange(desc(V1)) # on range par ordre decroissant
-
-names_champs[c(1:9),]
-
-## on regarde un un peu plus les 9 champs toujours renseigné 
-
-head(arbres_osm$osm_changeset)
-head(arbres_osm$tags)
 
 ## il est possible de vérifier les changeset ave ce format "https://www.openstreetmap.org/changeset/<Changeset number>"
 ## il est possible de verifier les nodes avec ce format : https://www.openstreetmap.org/node/<numéro de node>
