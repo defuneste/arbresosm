@@ -2,6 +2,7 @@
 data/
 graphs/
 rapport/
+exports/ 
 .Rproj.user
 .Rhistory
 .RData

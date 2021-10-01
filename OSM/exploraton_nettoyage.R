@@ -25,14 +25,17 @@ df_arbres
 # les differents tags : skey() renvoie la valeur de tous les attributs d'un hstore comme un set 
 # https://www.postgresql.org/docs/current/static/hstore.html
 
-querytags <- "SELECT DISTINCT skeys (tags), COUNT(*) AS decompte
+querytags <- "SELECT DISTINCT skeys (tags), COUNT(*) AS descompte
               FROM planet_osm_point
               WHERE planet_osm_point.natural = 'tree'
               GROUP BY skeys (tags)
-              ORDER BY decompte DESC;"
+              ORDER BY descompte DESC;"
 
 nom_tags <- dbGetQuery(con, querytags)
+nom_tags$type_de_field <- "hstore"
 dim(nom_tags)
+
+
 
 # les autres champs que tag
 
@@ -45,15 +48,23 @@ dim(nom_champs) # un peu d'info
 str(nom_champs) # un peu d'info
 
 names_champs <- nom_champs %>% # on prends le total
-    summarise_all(funs(sum(!is.na(.)))) # on compte ceux renseigné
+    dplyr::summarise(
+        dplyr::across(dplyr::everything(),
+                      ~ sum(!is.na(.x) # is on compte tout ce qui n'est pas NA
+                            )
+                      )
+        ) %>% 
+    tidyr::pivot_longer(cols = dplyr::everything(), # la transposition sur tout les colonnes
+                 names_to = "skeys",
+                 values_to = "descompte") %>% 
+    dplyr::filter(descompte != 0) %>% 
+    dplyr::mutate(type_de_field = "champs") 
 
-sum(names_champs > 0) # retourne le nombre de champs renseignés
-                      # attention tags et natural sont gardés
+descompte_champs <- names_champs %>% 
+                        dplyr::bind_rows(nom_tags) %>% 
+                        dplyr::arrange(dplyr::desc(descompte))
 
-# on garde les tags et les champs dans un seul df
-
-arbretemp <- nom_champs[,names_champs > 0] # on ne garde que les champs renseignés
-rm(nom_champs ) # on peut supprimer cette construction intermediaire pour gagner de la place
+# openxlsx::write.xlsx(descompte_champs, "exports/nom_tags.xlsx")
 
 # il faut convertir les infos dans hstore en un tableau
 # je me suis inspiré de cette réponse : 
