@@ -9,7 +9,10 @@
 
 source("OSM/connect_db_france.R")
 
-# combien il y a d'arbres dans la bd 
+## I Premier Niveau de Description =========================================
+
+# I.1 un petit exemple ====================================================
+# combien il y a d'arbres dans la bd ? 
 query <- "SELECT COUNT(p.natural)
           FROM planet_osm_point AS p
           WHERE p.natural ='tree';"
