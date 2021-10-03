@@ -1,61 +1,22 @@
-### projet pour l'analyse des arbres seul dans OSM 
-# exploration et "nettoyage des données"
-# octobre 2018
-# Petites notes sur le code :
-# pour me rapeller qu'un objet à des infos geometriques type vecteur je lui accolle un .shp
-# si c'est un raster .grid, si c'est un dataframe souvent un .dat
+# Date: octobre 2018, cotobre 2021
+# Auteur: Olivier Leroy  www.branchtwigleaf.com/
+# Objectif: qui sont les osmiens qui ajoite des arbres ?
+# Description du problème:
+# On reste en France, connection via la debian de l'ujm
+#
+# Libraries utilisées: 
+# "RPostgreSQL", "sf, "dplyr"
+
 
 ##.###################################################################################33
 ## I Chargement des différents packages demandés ====
 ##.#################################################################################33
 
 # chargement des codes depend de l'ent  
-source("code.R")
+source("OSM/connect_db_france.R")
 
 ### DB
-library(RPostgreSQL) # fait le lien avec postgre, utilise DBI
-
-### manip
-library(dplyr) # manip de données en tidyverse
-library(tibble)
-library(tidyr)
-library(lubridate) # date
-library(stringr) # modif sur character
-
-### visualisation
-library(ggplot2) # la visualisation
-library(tmap) # carto
-library(ggmap)# carto +
-library(leaflet) # carto web
-library(rsconnect) # pour partager une carte
-
-
-## analyse spatiale / carto
-library(sp) # classes et methodes pour données spatiales pe déclassé par SF
-library(rgdal) #gdal pour projection, crud et surtout export
-library(rgeos) # geos, penser à installer libgeos++-dev avant, travail avec objet sp
-library(sf) # nouveau package de classes et methodes spatiales doit "remplacer" rgdal et rgeos (et ofc sp) 
-library(units) # gestion des unités pour ha
-library(rmapshaper) #Visvalingam’s algorithm pour ms_simplify
-
-# il faut établir une connexion 
-
-pw <- {
-    chargelepwd # à charger avant
-}
-
-# charge les drivers pour postgre 
-drv <- dbDriver("PostgreSQL")
-# class(drv) #une verif
-
-# fais un pont vers la db réutilisable
-# ici j'ai pris une db en local pour tester
-# con sera utilisé pour chaque connection et pkoi le franciser
-con <- dbConnect(drv, dbname = "franceuser",
-                 host = "localhost", port = port, # attention 5432 par défaut
-                 user = "postgres", password = pw) # idem pour user
-rm(pw) # mouais
-
+library(sf) 
 
 ##.###################################################################################33
 ## II Ouverture et preprocessing des données ====
@@ -64,36 +25,130 @@ rm(pw) # mouais
 ##    1 - Recup des Arbres OSM  ================
 
 # import des conributeurs et du moment de la contribution
-user.shp <- st_read(con,  query = "SELECT  way, tags -> 'osm_timestamp' AS ts, tags -> 'osm_user' AS nom, tags -> 'osm_changeset' AS changeset,
-                       osm_id AS ID, tags -> 'osm_uid' AS user_id, tags -> 'osm_version' AS version
+user.shp <- st_read(con,  query = "SELECT  way, 
+                                           tags -> 'osm_timestamp' AS ts, 
+                                           tags -> 'osm_user' AS nom, 
+                                           tags -> 'osm_changeset' AS changeset,
+                                           osm_id AS ID, 
+                                           tags -> 'osm_uid' AS user_id, 
+                                           tags -> 'osm_version' AS version
                        FROM planet_osm_point
                        WHERE planet_osm_point.natural = 'tree';")
-#verif de routine
-dim(user.shp)
-str(user.shp)
 
-##    2 - Recup des shape util  ================
+##    2 - Recup des shapes utiles  ================
 
 # chargement du scripts des limites administratives
-source("limites_administratives.R")
-rm(commune_osm.shp) # on enleve ce fichier gros et pas utile pour de la visualisation
+
+dpt_L93.shp <- sf::read_sf("data/dpt_simp.geojson") %>% 
+                sf::st_transform(2154)
+
+regions.shp <- sf::st_read("data/regions_simp.geojson")
+
+france.shp <- sf::st_union(regions.shp)
 
 ##    3 - Preprocessing des données  ================
 
+#on avait 1 493 197 natural = tree sur l éxport france 
+
 user_france.shp <- user.shp[france.shp,] # je coupe avec la france
 
-user.dat <- user_france.shp %>%
-    st_set_geometry(value = NULL)  #drop de la geometrie
+# on est passé à 1400070
 
-user.dat$ts <- as_date(user.dat$ts) # on passe en POSIX juste date
-head(user.dat) # une verif
+user.dat <- sf::st_drop_geometry(user_france.shp)
+
+user.dat$ts <- as.Date(user.dat$ts) # on passe en POSIX juste date
+
+write.csv(user.dat, "data/user.csv")
 
 ##.###################################################################################33
 ## III Travail sur osm_user et sur l'encodage des arbress ====
 ##.#################################################################################33
 
+library(ggplot2)
 
 ##    1 - Evolution dans le temps des arbres dans OSM   ================
+
+# liste des utilisateurs avec le nombre d'arbres
+liste_user.dat <- user.dat %>% 
+    dplyr::group_by(nom) %>% 
+    dplyr::summarize(nb_arbre = dplyr::n(),
+              duree = max(ts) - min(ts)) %>% 
+    dplyr::arrange(nb_arbre) # ici je classe par par ordre descendant car je vais utiliser plus loin pour faire une courbe de lorentz
+liste_user.dat <- liste_user.dat %>% 
+    dplyr::mutate(order = 1:length(liste_user.dat$nom)) 
+
+##    2 - Contribution cumulée de chaques utilisateurs    ================
+
+#  nombre d'utilisateurs contribuant aux arbres
+dim(liste_user.dat)
+
+median(liste_user.dat$nb_arbre) # mediane
+mean(liste_user.dat$nb_arbre) # moyenne
+
+liste_user.dat$cumsum_nbarbre <- cumsum(liste_user.dat$nb_arbre) # somme cumulée des arbres
+
+# des pourcentages
+liste_user.dat <- liste_user.dat %>% 
+    dplyr::mutate(pourcent_order = order/max(liste_user.dat$order) * 100,
+           pourcent_arbre = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre) * 100)
+
+# on produit un tableau avec le decompte par types
+# attention je part du principe que la zone (france) de la base de données
+# est bien correspondante : ce qui est pas tout à le cas
+
+poly_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS count
+                             FROM planet_osm_polygon 
+                             GROUP BY nom;")
+
+ligne_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS count
+                              FROM planet_osm_roads
+                              GROUP BY nom;" )
+
+poi_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS count
+                            FROM planet_osm_point
+                            GROUP BY nom;")
+# on ajoute le tout
+
+OSM_user <- rbind(poly_count.dat, ligne_count.dat, poi_count.dat )
+
+OSM_user_tot <- OSM_user %>% 
+    dplyr::group_by(nom) %>% 
+    dplyr::summarise(comptage = sum(count)) %>% 
+    dplyr::arrange(comptage) # ici je classe par par ordre descendant car je vais utiliser plus loin pour faire une courbe de lorentz
+
+OSM_user_tot <- OSM_user_tot %>% 
+    dplyr::mutate(order = 1:length(OSM_user_tot$nom)) 
+
+OSM_user_tot$cumsum_nbarbre <- cumsum(OSM_user_tot$comptage) # somme cumulée des arbres
+
+sum(OSM_user_tot$comptage) # nombre d'objet dans OSM france
+
+# ici j' ai regarde les rangs
+text_lorentz <- dplyr::slice(liste_user.dat, c(3864,3951,3977))
+label_text_lorentz <- c("121 contributeurs", "34 contributeurs", "8 contributeurs")
+
+# ici order est divisé par son max et pareil pour la somme cumuléé
+# cela les passe de 0 à 1 et on modifie les labels avec 
+# scales::percent
+ggplot(liste_user.dat, 
+       aes(x = order/max(order), 
+           y = cumsum_nbarbre/max(cumsum_nbarbre))) +
+    geom_path(aes(colour = "forestgreen"), 
+              size = 1.5) +
+    geom_line(data = OSM_user_tot,
+              aes(x = order/max(order) , 
+                                       y = cumsum_nbarbre/max(cumsum_nbarbre), colour = "gray30"), lty = 2) +
+    scale_x_continuous(labels = scales::percent) +
+    scale_y_continuous(labels = scales::percent) +
+    labs( y = "Pourcentage d'arbres ajoutés",
+          x = "Pourcentage de contributeurs", 
+          caption = "© Contributeurs OpenStreetMap ") + 
+    geom_text(data = text_lorentz, aes(x = order/max(liste_user.dat$order), y = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre)),
+               label = label_text_lorentz, hjust= 1.1, col = "gray50") +
+    scale_colour_manual(name = '', 
+                        values =c("forestgreen"="forestgreen","gray30"="gray30"), labels = c("Arbres isolés","Objets OSM")) +
+    theme_bw() +
+    theme(legend.position = "top")
 
 # j'ai pris la 15aine mais on est presque de l'ordre du jour
 # ici sur un fichier léger
@@ -102,16 +157,17 @@ ggplot(user.dat, aes(x = ts)) +
     geom_histogram(binwidth = 15) +
     xlab("Années") +
     ylab("Nb. arbres isolés") +
-    labs(caption ="source : © les contributeurs d’OpenStreetMap")
+    labs(caption ="source : © les contributeurs d’OpenStreetMap") +
+    theme_bw()
 
-# si on veut aller un peu plus loin et verifier d'ou vient la donnée on peut utilsier les champs refs
+# si on veut aller un peu plus loin et verifier d'ou vient la donnée on peut utiliser les champs refs
 # il faut prendre cette base dans exploration, je devrais pe en faire une version r binary pour gagner 
 # du temps
 
 # un grep pour avoir les noms de variables qui commence par ref
 import_bd <- names(arbres_osm)[grep(pattern = "^ref", names(arbres_osm))]
 
-# ref est etrange et doit être un peu osculté, il semble cependant bien que ce soit une ref d'une base
+# ref est étrange et doit être un peu ausculté, il semble cependant bien que ce soit une ref d'une base
 
 pas_na <- function(x) {sum(!is.na(x))} # une fonction qui somme les T/F sur des pas Na
 
@@ -120,7 +176,7 @@ lapply(arbres_osm[names(arbres_osm)[grep(pattern = "^ref", names(arbres_osm))]],
 
 arbres_osm$refbd <- apply(arbres_osm[,import_bd], 1, pas_na)
 
-table(arbres_osm$refbd)  # j'ai des cheffauchement au max 3 et souvent 2 sur Paris
+table(arbres_osm$refbd)  # j'ai des chevauchement au max 3 et souvent 2 sur Paris
 
 # ici je prefére du 0/1 mais c'est discutable
 arbres_osm$refbd[arbres_osm$refbd >= 1] <- 1
@@ -161,91 +217,12 @@ ggplot(arbres_osm, aes(x = osm_timestamp, fill = as.factor(info))) +
 user.dat %>% 
     filter(nom == "defuneste")
 
-##    2 - Contribution cumulée de chaques utilisateurs    ================
-
-# liste des utilisteurs avec le nombre d'arbres
-liste_user.dat <- user.dat %>% 
-    group_by(nom) %>% 
-    summarise(nb_arbre = n(),
-              duree = max(ts) - min(ts)) %>% 
-    arrange(nb_arbre) # ici je classe par par ordre descendant car je vais utiliser plus loin pour faire une courbe de lorentz
-liste_user.dat <- liste_user.dat %>% 
- mutate(order = 1:length(liste_user.dat$nom)) 
-
-
-#  nombre d'utilsateurs contribuant aux arbres
-dim(liste_user.dat)
-
-median(liste_user.dat$nb_arbre) # mediane
-mean(liste_user.dat$nb_arbre) # moyenne
-
-liste_user.dat$cumsum_nbarbre <- cumsum(liste_user.dat$nb_arbre) # somme cumulée des arbres
-sum(liste_user.dat$nb_arbre) == max(liste_user.dat$cumsum_nbarbre) # verif de parano
-
-# des pourcentages
-liste_user.dat <- liste_user.dat %>% 
-    mutate(pourcent_order = order/max(liste_user.dat$order)*100,
-           pourcent_arbre = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre)*100)
-
-# ici j' ai regarde les rangs
-text_lorentz <- slice(liste_user.dat, c(2495,2549,2564))
-label_text_lorentz <- c("73 contributeurs", "20 contributeurs", "5 contributeurs")
-
-
 ## constitution d'un tableau pour les profils d'utilisteurs : 
 
 dbListTables(con)
 
-# on produit un tableau avec le decompte par types
-# attention je part du principe que la zone (france) de la base de données
-# est bien correspondante : ce qui est pas tout à le cas
-
-poly_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS count
-                             FROM planet_osm_polygon 
-                             GROUP BY nom;")
-
-ligne_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS count
-                              FROM planet_osm_roads
-                              GROUP BY nom;" )
-
-poi_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS count
-                            FROM planet_osm_point
-                            GROUP BY nom;")
-# on ajoute le tout
-
-OSM_user <- rbind(poly_count.dat, ligne_count.dat, poi_count.dat )
-
-OSM_user_tot <- OSM_user %>% 
-    group_by(nom) %>% 
-    summarise(comptage = sum(count)) %>% 
-    arrange(comptage) # ici je classe par par ordre descendant car je vais utiliser plus loin pour faire une courbe de lorentz
-
-OSM_user_tot <- OSM_user_tot %>% 
-    mutate(order = 1:length(OSM_user_tot$nom)) 
-
-OSM_user_tot$cumsum_nbarbre <- cumsum(OSM_user_tot$comptage) # somme cumulée des arbres
-
-sum(OSM_user_tot$comptage) # nombre d'objet dans OSM france
 
 
-# ici order est divisé par son max et pareil pour la somme cumuléé
-# cela les passe de 0 à 1 et on modifie les labels avec 
-# scales::percent
-ggplot(liste_user.dat, aes(x = order/max(liste_user.dat$order), y = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre))) +
-    geom_path(aes(colour = "forestgreen"), size = 1.5) +
-        geom_line(data = OSM_user_tot, aes(x = order/max(OSM_user_tot$order) , 
-                                       y = cumsum_nbarbre/max(OSM_user_tot$cumsum_nbarbre), colour = "gray30"), lty = 2) +
-    scale_x_continuous(labels = scales::percent) +
-    scale_y_continuous(labels = scales::percent) +
-    labs( y = "Pourcentage d'arbres ajoutés",
-          x = "Pourcentage de contributeurs", 
-          caption = "© Contributeurs OpenStreetMap ") + 
-    geom_text(data = text_lorentz, aes(x = order/max(liste_user.dat$order), y = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre)),
-              label = label_text_lorentz, hjust= 1.1, col = "gray50") +
-    scale_colour_manual(name = '', 
-                        values =c("forestgreen"="forestgreen","gray30"="gray30"), labels = c("Arbres isolés","Objets OSM")) +
-    theme_bw() +
-    theme(legend.position = "top")
 
 
 
