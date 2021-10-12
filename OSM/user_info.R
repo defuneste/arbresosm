@@ -42,7 +42,7 @@ user.shp <- st_read(con,  query = "SELECT  way,
 dpt_L93.shp <- sf::read_sf("data/dpt_simp.geojson") %>% 
                 sf::st_transform(2154)
 
-regions.shp <- sf::st_read("data/regions_simp.geojson")
+regions.shp <- sf::read_sf("data/regions_simp.geojson")
 
 france.shp <- sf::st_union(regions.shp)
 
@@ -77,12 +77,12 @@ liste_user.dat <- user.dat %>%
 liste_user.dat <- liste_user.dat %>% 
     dplyr::mutate(order = 1:length(liste_user.dat$nom)) 
 
-##    2 - Contribution cumulée de chaques utilisateurs    ================
+##    2 - Contribution cumulée de chaque utilisateurs    ================
 
 #  nombre d'utilisateurs contribuant aux arbres
 dim(liste_user.dat)
 
-median(liste_user.dat$nb_arbre) # mediane
+median(liste_user.dat$nb_arbre) # médiane
 mean(liste_user.dat$nb_arbre) # moyenne
 
 liste_user.dat$cumsum_nbarbre <- cumsum(liste_user.dat$nb_arbre) # somme cumulée des arbres
@@ -92,8 +92,8 @@ liste_user.dat <- liste_user.dat %>%
     dplyr::mutate(pourcent_order = order/max(liste_user.dat$order) * 100,
            pourcent_arbre = cumsum_nbarbre/max(liste_user.dat$cumsum_nbarbre) * 100)
 
-# on produit un tableau avec le decompte par types
-# attention je part du principe que la zone (france) de la base de données
+# on produit un tableau avec le décompte par types
+# attention je part du principe que la zone (France) de la base de données
 # est bien correspondante : ce qui est pas tout à le cas
 
 poly_count.dat <- dbGetQuery(con, "SELECT tags -> 'osm_user' AS nom, COUNT (*) AS count
@@ -160,129 +160,64 @@ ggplot(user.dat, aes(x = ts)) +
     labs(caption ="source : © les contributeurs d’OpenStreetMap") +
     theme_bw()
 
-# si on veut aller un peu plus loin et verifier d'ou vient la donnée on peut utiliser les champs refs
-# il faut prendre cette base dans exploration, je devrais pe en faire une version r binary pour gagner 
-# du temps
-
-# un grep pour avoir les noms de variables qui commence par ref
-import_bd <- names(arbres_osm)[grep(pattern = "^ref", names(arbres_osm))]
-
-# ref est étrange et doit être un peu ausculté, il semble cependant bien que ce soit une ref d'une base
-
-pas_na <- function(x) {sum(!is.na(x))} # une fonction qui somme les T/F sur des pas Na
-
-# ici je compte les nom Na pour les refs
-lapply(arbres_osm[names(arbres_osm)[grep(pattern = "^ref", names(arbres_osm))]], pas_na)
-
-arbres_osm$refbd <- apply(arbres_osm[,import_bd], 1, pas_na)
-
-table(arbres_osm$refbd)  # j'ai des chevauchement au max 3 et souvent 2 sur Paris
-
-# ici je prefére du 0/1 mais c'est discutable
-arbres_osm$refbd[arbres_osm$refbd >= 1] <- 1
-
-# une petite verif visuelle : il y a pb des erreurs avec "ref"
-# arbres_osm %>% 
-#     filter(refbd == 1) %>% 
-#     select(import_bd, refbd) %>% 
-#     view()
-
-# on passe dans un format dates
-arbres_osm$osm_timestamp <- as.Date(arbres_osm$osm_timestamp) # en date attention on perd l'heure/minutes
-
-ggplot(arbres_osm, aes(x = osm_timestamp, fill = as.factor(refbd))) +
-    geom_histogram(binwidth = 15) +
-    xlab("Year") +
-    ylab("Isolated trees") +
-    labs(caption ="© OpenStreetMap contributors") + 
-    guides(fill=guide_legend(title="Ref. from DB import:")) +
-    scale_fill_manual(labels = c("- Not indicated", "- Indicated"), values = c("#1b9e77", "#7570b3"))
-
-
-## ici une version de ce graph en tenant compte de l'info botanique
-arbres_osm$info <- 0 # un nouveau champ
-arbres_osm$info[!is.na(arbres_osm$genus)] <- 1 # il prend 1 quamd j'ai une info sur genus
-arbres_osm$info[!is.na(arbres_osm$species)] <- 1 # il prend 1 quamd j'ai une info sur species
-
-
-ggplot(arbres_osm, aes(x = osm_timestamp, fill = as.factor(info))) +
-    geom_histogram(binwidth = 15) +
-    xlab("Year") +
-    ylab("Isolated trees") +
-    labs(caption ="© OpenStreetMap contributors") +
-    guides(fill=guide_legend(title="Botanic information:")) +
-    scale_fill_manual(labels = c("- not indicated", "- indicated"), values = c("#d95f02", "#7570b3"))
-
-# une verif pour s'assurer que osm_uid correspond bien à l'id de l'user
-user.dat %>% 
-    filter(nom == "defuneste")
-
-## constitution d'un tableau pour les profils d'utilisteurs : 
+## constitution d'un tableau pour les profils d'utilisateurs : 
 
 dbListTables(con)
-
-
-
-
-
 
 ## comptage du nombre de jour ou un arbre à été ajouté modifié
 
 nb_jour <- user.dat %>% 
     #filter(ts > "2018-11-01") %>% 
-    group_by(nom, ts) %>% 
-    summarise(tot = 1,
-              arbre_date = n()) %>%
-    group_by(nom) %>% 
-    summarise(nb_jour =  sum(tot),
+    dplyr::group_by(nom, ts) %>% 
+    dplyr::summarize(tot = 1,
+                    arbre_date = dplyr::n()) %>%
+    dplyr::group_by(nom) %>% 
+    dplyr::summarize(nb_jour =  sum(tot),
               max_arbre_jour = max(arbre_date))
-
-# une petite verification avec une user
-
-user.dat %>% 
-    filter(nom == "_phiphou_") %>%
-    distinct(ts)
 
 # join attention sur le meme nom
 liste_user.dat <- liste_user.dat %>%
-    left_join(nb_jour, by = "nom")
+    dplyr::left_join(nb_jour, by = "nom")
 
 dim(liste_user.dat)
 
-##    3 - Contribution par dpt    ================
+##    3 - Contribution par dpt    ===============================================
 
 #user_shape.shp contient la geométrie et les users
-user_france.shp <- st_join(user_france.shp, dpt.shp["name"]) 
+
+user_france.shp <- st_transform(user_france.shp, 2154)
+
+user_france.shp <- st_join(user_france.shp, dpt_L93.shp["name"]) 
+
+names(user_france.shp)
 
 # on a des NA (85) verification :
 
 user_na.shp <- user_france.shp %>% 
-    filter(is.na(name))
+    dplyr::filter(is.na(name))
 
 plot(st_geometry(france.shp))
 plot(st_geometry(user_na.shp), add = T, col = "red")
 
 # je vais dropper les NA, le pb vient que je fais le tri sur le shape des communes simplifié 
-# pas le meme que celui des dpts
+# pas le meme que celui des dpts et donc il y a quelques points hors des clou
 
 user_france.shp <- user_france.shp %>% 
-    filter(!is.na(name))
+    dplyr::filter(!is.na(name))
 
-
-# la majorité des points sont genevois donc devrait 
 
 # histograme contributeurs contribuant dans un ou plus de un departements
 user_france.shp %>% 
-    st_set_geometry(value = NULL) %>% # on drop la geométrie pour aller plus vite
-    group_by(nom) %>% # on group pas nom
-    summarise(dpt_nombre = n_distinct(name)) %>%  # on compte par dpt distincts
-    ggplot() +
-    geom_histogram(aes(x = dpt_nombre), binwidth = 1, fill = "darkblue") +
-    labs( y = "Nombre de contributeurs",
+    sf::st_set_geometry(value = NULL) %>% # on drop la geométrie pour aller plus vite
+    dplyr::group_by(nom) %>% # on group pas nom
+    dplyr::summarize(dpt_nombre = dplyr::n_distinct(name)) %>%  # on compte par dpt distincts
+    ggplot2::ggplot() +
+    ggplot2::geom_histogram(ggplot2::aes(x = dpt_nombre), binwidth = 1, fill = "darkblue") +
+    ggplot2::labs( y = "Nombre de contributeurs",
           x = "Nombre de départements de contributions", 
           caption = "© Contributeurs OpenStreetMap "
         ) + 
-    theme_bw()
+    ggplot2::theme_bw()
 
 # Une approximation des users par dpt
 
@@ -355,6 +290,65 @@ temp_user <- user_france.shp %>%
 
 liste_user.dat <- liste_user.dat %>%
     left_join(temp_user, by = "nom")
+
+
+# si on veut aller un peu plus loin et verifier d'ou vient la donnée on peut utiliser les champs refs
+# il faut prendre cette base dans exploration, je devrais pe en faire une version r binary pour gagner 
+# du temps
+
+# un grep pour avoir les noms de variables qui commence par ref
+import_bd <- names(arbres_osm)[grep(pattern = "^ref", names(arbres_osm))]
+
+# ref est étrange et doit être un peu ausculté, il semble cependant bien que ce soit une ref d'une base
+
+pas_na <- function(x) {sum(!is.na(x))} # une fonction qui somme les T/F sur des pas Na
+
+# ici je compte les nom Na pour les refs
+lapply(arbres_osm[names(arbres_osm)[grep(pattern = "^ref", names(arbres_osm))]], pas_na)
+
+arbres_osm$refbd <- apply(arbres_osm[,import_bd], 1, pas_na)
+
+table(arbres_osm$refbd)  # j'ai des chevauchement au max 3 et souvent 2 sur Paris
+
+# ici je prefére du 0/1 mais c'est discutable
+arbres_osm$refbd[arbres_osm$refbd >= 1] <- 1
+
+# une petite verif visuelle : il y a pb des erreurs avec "ref"
+# arbres_osm %>% 
+#     filter(refbd == 1) %>% 
+#     select(import_bd, refbd) %>% 
+#     view()
+
+# on passe dans un format dates
+arbres_osm$osm_timestamp <- as.Date(arbres_osm$osm_timestamp) # en date attention on perd l'heure/minutes
+
+ggplot(arbres_osm, aes(x = osm_timestamp, fill = as.factor(refbd))) +
+    geom_histogram(binwidth = 15) +
+    xlab("Year") +
+    ylab("Isolated trees") +
+    labs(caption ="© OpenStreetMap contributors") + 
+    guides(fill=guide_legend(title="Ref. from DB import:")) +
+    scale_fill_manual(labels = c("- Not indicated", "- Indicated"), values = c("#1b9e77", "#7570b3"))
+
+
+## ici une version de ce graph en tenant compte de l'info botanique
+arbres_osm$info <- 0 # un nouveau champ
+arbres_osm$info[!is.na(arbres_osm$genus)] <- 1 # il prend 1 quamd j'ai une info sur genus
+arbres_osm$info[!is.na(arbres_osm$species)] <- 1 # il prend 1 quamd j'ai une info sur species
+
+
+ggplot(arbres_osm, aes(x = osm_timestamp, fill = as.factor(info))) +
+    geom_histogram(binwidth = 15) +
+    xlab("Year") +
+    ylab("Isolated trees") +
+    labs(caption ="© OpenStreetMap contributors") +
+    guides(fill=guide_legend(title="Botanic information:")) +
+    scale_fill_manual(labels = c("- not indicated", "- indicated"), values = c("#d95f02", "#7570b3"))
+
+# une verif pour s'assurer que osm_uid correspond bien à l'id de l'user
+user.dat %>% 
+    filter(nom == "defuneste")
+
 
 
 ## FIN: se deconnecter de la base ===================
