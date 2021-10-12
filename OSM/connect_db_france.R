@@ -6,7 +6,7 @@
 # maj_totale_france_journalisé.sh
 # /!\ la deconnection n'est pas 
 # Libraries utilisées:
-# "RPostgreSQL"
+# "RPostgreSQL", "sf"
 
 # 1 Chargement des codes et de la library =======================
 source("code.R")
