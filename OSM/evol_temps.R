@@ -58,19 +58,38 @@ plot(mes_bbox,  add = T)
 
 # pb avec l'Afrique ! et c'est un peu juste pour la zone pacifique !
 
-europe <- read.csv("data/test", sep = "\t")
-names(europe) <- c("user", "timestamp")
+# j'ai produit une liste de csv par des tas de bbox. Ils ne contiennent que l'id de la node 
+# le nom de l'user et la timsteamp
 
-europe$timestamp <- as.Date(europe$timestamp)
-str(europe)
+# liste des path
+
+liste_csv <- list.files("data/data_ts/", 
+                        full.names = TRUE)
+
+bbox <- lapply(liste_csv, 
+               read.csv, 
+               quote = "", sep = "\t", col.names = c("id", "user", "timestamp"))
+
+bbox <- do.call("rbind", bbox)
+bbox$timestamp <- as.Date(bbox$timestamp)
 
 library(ggplot2)
 
-ggplot(europe, aes(x = timestamp)) +
+ggplot(bbox, aes(x = timestamp)) +
     geom_histogram(binwidth = 15) +
     xlab("Années") +
     ylab("Nb. arbres isolés") +
     labs(caption ="source : © les contributeurs d’OpenStreetMap") +
     theme_bw()
 
-## un pb sur timestamp c'est pas cohérent
+# nombre d'users
+length(unique(bbox$user))
+
+count_by_user <- aggregate(id ~ user, data = bbox, FUN = length)
+
+count_by_user <- count_by_user[order(count_by_user$id, 
+                    decreasing = TRUE),]
+
+names(count_by_user)[2] <- "Nb_arbres"
+
+summary(count_by_user$Nb_arbres)
