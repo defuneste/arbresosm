@@ -1,0 +1,34 @@
+---
+title: "creation_db_arbre_monde´"
+author: "Olivier Leroy"
+date: "10/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Contexte
+
+Sur mon laptop les arbres d'OSM monde sont un peu trop volumineux pour executer certaines operations (pr exemple changer de projection). Pour repondre à ce problème je vais passer par une BD PostgreSQL/Postgis et faire une part de ces operations dedans. 
+
+
+Postgres 13 et postgis 3 ont été installé. Je n'ai pas touché à l'administration de Postgres vu que je suis en local mais c'est à faire au besoin. 
+
+
+## Création de la base
+
+```bash
+sudo su - postgres
+```
+
+Une fois loggué + psql
+
+
+```sql
+create database arbremonde;
+create schema if not exists postgis;
+alter database arbremonde set search_path=public, postgis, contrib;
+```
