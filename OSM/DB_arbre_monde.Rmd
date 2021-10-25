@@ -24,11 +24,29 @@ Postgres 13 et postgis 3 ont été installé. Je n'ai pas touché à l'administr
 sudo su - postgres
 ```
 
-Une fois loggué + psql
+Une fois loggué on va créer un nouveau user 
 
+```bash
+createuser --interactive -P oli
+```
+
+Je lui ai ainsi donné des droits de création et un pwd (c'est tout).
+
+En user postgres: 
 
 ```sql
 create database arbremonde;
 create schema if not exists postgis;
 alter database arbremonde set search_path=public, postgis, contrib;
+grant all privileges on database arbremonde to oli;
 ```
+
+On se connecte sur la db (`\connect arbremonde`)
+
+```sql
+create table adresse_temp (id bigint primary key,
+ lat float, lon float);
+``` 
+
+
+\copy adresse_temp  from 'arbre_monde.csv' delimiter ',' ;

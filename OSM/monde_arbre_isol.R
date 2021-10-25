@@ -10,6 +10,7 @@
 # Il faut commencer par verifier les bbox associées à ces exports 
 # pour verifier si elles se superposent 
 
+
 library(sf)
 library(spData)
 
@@ -22,6 +23,27 @@ bbox <- lapply(liste_csv,
                quote = "", sep = "\t", col.names = c("id", "lat", "lon"))
 
 bbox <- do.call("rbind", bbox)
+
+library(RPostgreSQL)
+
+source("code2.R")
+
+drv <- dbDriver("PostgreSQL")
+
+con <- dbConnect(
+    drv,
+    user = usr,
+    password = pwd,
+    dbname = "arbremonde",
+    host = "localhost",
+
+)
+
+dbListTables(con)
+
+bbox_head <- bbox[1:100,]
+
+write.csv2(bbox, "data/arbre_monde2.csv")
 
 bbox.shp <- st_as_sf(bbox,
                      coords = c("lon", "lat"),
@@ -37,8 +59,6 @@ plot(world$geom)
 
 projected_Eckert  <- st_crs("+proj=eck4")
 bbox_Eckert  <- st_transform(bbox.shp, crs = projected_Eckert )
-
-bbox_robin < 
 
 world_robin <- st_transform(world, crs = projected_robin)
 
