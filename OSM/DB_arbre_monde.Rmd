@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Sur mon laptop les arbres d'OSM monde sont un peu trop volumineux pour executer certaines operations (pr exemple changer de projection). Pour repondre à ce problème je vais passer par une BD PostgreSQL/Postgis et faire une part de ces operations dedans. 
 
 
-Postgres 13 et postgis 3 ont été installé. Je n'ai pas touché à l'administration de Postgres vu que je suis en local mais c'est à faire au besoin. 
+Postgres 13 et postgis 3 ont été installés. Je n'ai pas touché à l'administration de Postgres vu que je suis en local mais c'est à faire au besoin. 
 
 
 ## Création de la base
@@ -41,12 +41,56 @@ alter database arbremonde set search_path=public, postgis, contrib;
 grant all privileges on database arbremonde to oli;
 ```
 
-On se connecte sur la db (`\connect arbremonde`)
+On se connecte sur la db (`\connect arbremonde`).
 
 ```sql
-create table adresse_temp (id bigint primary key,
+create table adresse_temp (id varchar(11) primary key,
  lat float, lon float);
 ``` 
 
+La production du CSV c'est faite avec R et à du être adaptée. J'ai rencontré comme problème:
 
+ 1. Lors de l'import des csv il est important de bien spécifier les data types. Dans ce cas pour faciliter la lecture du champs ID de l'objet OSM j'ai décider de le passer en `character` 
+ 
+```{r, eval=FALSE}
+liste_csv <- list.files("data/coord/", 
+                        full.names = TRUE)
+
+bbox2 <- lapply(liste_csv, 
+               read.table, 
+               quote = "", 
+               sep = "\t", 
+               header = TRUE,
+               col.names = c("id", "lat", "lon"), 
+               colClasses = c("character", "numeric", "numeric"))
+
+bbox2 <- do.call("rbind", bbox2)
+```
+
+ 2. Pour l'écriture du csv il faut retirer les `""` car il en rajoute si on lui spécifie le type de data en `varchar`. 
+
+Puis pour l'écriture: 
+
+```{r, eval=FALSE}
+write.table(bbox2, 
+            "data/arbre_monde.csv",
+            col.names = FALSE,
+            row.names = FALSE,
+            quote = FALSE,
+            sep = ",")
+```
+
+
+Dans `psql` :
+
+```psql
+\cd /mon_path/complet/vers_Adress_temp
+\! pwd
 \copy adresse_temp  from 'arbre_monde.csv' delimiter ',' ;
+```
+
+Je teste sur un petit jeux de données (1000 lignes) avant de faire les opérations sur l'ensemble.
+
+```sql
+update table_test set geog = ST_SetSRID(ST_MakePoint(lon, lat), 4326)::geography; 
+```

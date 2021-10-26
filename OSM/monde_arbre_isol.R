@@ -10,20 +10,8 @@
 # Il faut commencer par verifier les bbox associées à ces exports 
 # pour verifier si elles se superposent 
 
-
 library(sf)
 library(spData)
-
-
-liste_csv <- list.files("data/coord/", 
-                        full.names = TRUE)
-
-bbox <- lapply(liste_csv, 
-               read.csv, 
-               quote = "", sep = "\t", col.names = c("id", "lat", "lon"))
-
-bbox <- do.call("rbind", bbox)
-
 library(RPostgreSQL)
 
 source("code2.R")
@@ -39,15 +27,12 @@ con <- dbConnect(
 
 )
 
-dbListTables(con)
-
-bbox_head <- bbox[1:100,]
-
-write.csv2(bbox, "data/arbre_monde2.csv")
 
 bbox.shp <- st_as_sf(bbox,
                      coords = c("lon", "lat"),
                      crs = 4326)
+
+dbDisconnect(con)
 
 st_is_longlat(bbox.shp)
 
@@ -55,7 +40,6 @@ plot(world$geom)
 
 # au final geom_bind2d utilise x = lon et y = lat
 # si on veut changer la proj et rester avec bind2e il faudra reprojeter
-
 
 projected_Eckert  <- st_crs("+proj=eck4")
 bbox_Eckert  <- st_transform(bbox.shp, crs = projected_Eckert )
